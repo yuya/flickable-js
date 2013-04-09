@@ -112,11 +112,11 @@ define(["zepto", "mocha", "chai", "../src/helper"], function($, Mocha, Chai, Hel
       });
     });
     return describe(".ucFirst()", function() {
-      it("String を渡すと先頭が大文字で返ってくる", function() {
+      it("\"webkitTransform\" とか渡すと \"WebkitTransform\" で返ってくる", function() {
         expect(helper.ucFirst("webkitTransform")).to.be.a("string");
         return expect(helper.ucFirst("webkitTransform")).to.equal("WebkitTransform");
       });
-      it("String だけどアルファベットじゃない君はありのままの君", function() {
+      it("String だけどアルファベットじゃない君 (\"123\") はありのままの君", function() {
         expect(helper.ucFirst("123")).to.be.a("string");
         return expect(helper.ucFirst("123")).to.equal("123");
       });

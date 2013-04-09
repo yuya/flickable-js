@@ -93,10 +93,10 @@ define [
         expect(helper.getCSSVal([1..3])).to.be.a("null")
 
     describe ".ucFirst()", ->
-      it "String を渡すと先頭が大文字で返ってくる", ->
+      it "\"webkitTransform\" とか渡すと \"WebkitTransform\" で返ってくる", ->
         expect(helper.ucFirst("webkitTransform")).to.be.a("string")
         expect(helper.ucFirst("webkitTransform")).to.equal("WebkitTransform")
-      it "String だけどアルファベットじゃない君はありのままの君", ->
+      it "String だけどアルファベットじゃない君 (\"123\") はありのままの君", ->
         expect(helper.ucFirst("123")).to.be.a("string")
         expect(helper.ucFirst("123")).to.equal("123")
       it "String じゃないものだったら null を返す", ->
