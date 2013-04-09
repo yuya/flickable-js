@@ -14,8 +14,8 @@ require.config
       exports: "Mocha"
     chai:
       exports: "Chai"
-    sinon:
-      exports: "Sinon"
+    # sinon:
+    #   exports: "Sinon"
   waitSeconds: 180
   baseUrl: "/"
   urlArgs: do ->
@@ -25,9 +25,8 @@ require [
   # libs
   "mocha"
   "chai"
-  "sinon"
 
   # test files
   "./helper.js"
-], (Mocha, Chai, Sinon) ->
+], (Mocha, Chai) ->
   Mocha.run()

@@ -19,9 +19,6 @@ require.config({
     },
     chai: {
       exports: "Chai"
-    },
-    sinon: {
-      exports: "Sinon"
     }
   },
   waitSeconds: 180,
@@ -31,6 +28,6 @@ require.config({
   })()
 });
 
-require(["mocha", "chai", "sinon", "./helper.js"], function(Mocha, Chai, Sinon) {
+require(["mocha", "chai", "./helper.js"], function(Mocha, Chai) {
   return Mocha.run();
 });

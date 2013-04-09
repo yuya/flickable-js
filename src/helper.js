@@ -28,6 +28,8 @@ define(function() {
             _results.push(this.div.style[prop] !== void 0);
           }
           return _results;
+        } else if (typeof props === "string") {
+          return this.div.style[prop] !== void 0;
         } else {
           return null;
         }
@@ -40,7 +42,7 @@ define(function() {
         if (_saveProp) {
           return style[_saveProp] = val;
         } else if (style[prop] !== void 0) {
-          saveProp[prop] = prop;
+          this.saveProp[prop] = prop;
           return style[prop] = val;
         } else {
           _ref = this.prefixes;

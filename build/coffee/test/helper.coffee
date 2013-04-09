@@ -1,12 +1,31 @@
 define [
+  "zepto"
   "mocha"
   "chai"
   "../src/helper"
-], (Mocha, Chai, Helper) ->
+], ($, Mocha, Chai, Helper) ->
   expect = Chai.expect
 
   describe "Helper Class", ->
     helper = new Helper()
+
+    describe ".getPage()", ->
+      el = $("<div>")
+      moveEvent = if "ontouchstart" in window then "touchmove" else "mousemove"
+
+      it "click イベントが発火しただけだし pageX は 0 が返ってくる", ->
+        el.on "click", (event) ->
+          expect(helper.getPage(event, "pageX")).to.equal(0)
+        el.click()
+      it "#{moveEvent} イベントが発火しただけだし pageY は 0 が返ってくる", ->
+        el.on moveEvent, (event) ->
+          expect(helper.getPage(event, "pageY")).to.equal(0)
+        el.click()
+      it "全く関係ない load イベントとかで取得しようとしても undefined とかじゃね シラネ", ->
+        evt = document.createEvent("Event")
+        evt.initEvent("load", false, false)
+
+        expect(helper.getPage(evt, "pageX")).to.be.a("undefined")
 
     describe ".hasProp()", ->
       it "先行実装な CSS Property の配列を渡すと存在するかチェケラする。今どき transform ならあるよね", ->
@@ -20,20 +39,48 @@ define [
         expect(helper.hasProp(props)).to.be.instanceof(Array)
         expect(helper.hasProp(props)).to.contain(true)
 
-      it "svgMatrixZ とかいうイミフなプロパティ達を渡したら当然 true を含まない Array が返ってくる", ->
-        props = [
-          "svgMatrixZ"
-          "WebkitSvgMatrixZ"
-          "MozSvgMatrixZ"
-          "OSvgMatrixZ"
-          "msMatrixZ"
-        ]
-        expect(helper.hasProp(props)).to.be.instanceof(Array)
-        expect(helper.hasProp(props)).to.not.contain(true)
-      it "Array じゃないもの渡されても困るので null を返す", ->
-        expect(helper.hasProp("WebkitTransform")).to.be.a("null")
+      it "svgMatrixZ とかいうイミフな String を渡したら当然 false が返ってくる", ->
+        prop = "svgMatrixZ"
+        expect(helper.hasProp(prop)).to.be.false
+      it "Array でも String でもないのを渡されても困るので null を返す", ->
+        expect(helper.hasProp(undefined)).to.be.a("null")
 
     describe ".setStyle()", ->
+      el = document.createElement("div")
+      setStyles = (styles) ->
+        style = el.style
+
+        for prop, value of styles
+          helper.setStyle(style, prop, value)
+
+      beforeEach (done) ->
+        el.removeAttribute("style")
+        helper.saveProp = {}
+        done()
+
+      it ("display: none; を追加したから style=\"diplay: none;\" ってなってるはず"), ->
+        # before ->
+        setStyles(
+          display: "block"
+        )
+        expect(el.getAttribute("style")).to.equal("display: block;")
+      it ("プロパティ複数指定したら、指定した順番に style 属性に入ってるはず"), ->
+        setStyles(
+          display: "none"
+          width: "100px"
+          height: "100px"
+          margin: "0px auto"
+        )
+        expect(el.getAttribute("style")).to.equal("display: none; width: 100px; height: 100px; margin: 0px auto;")
+      it ("prefix が必要なやつはプロパティはよしなに prefix つけて、よしなに纏めてくれるはず"), ->
+        setStyles(
+          width: "100px"
+          height: "100px"
+          transform: "translate(0, 0)"
+          transitionTimingFunction: "ease"
+          transitionDuration: "0ms"
+        )
+        expect(el.getAttribute("style")).to.equal("width: 100px; height: 100px; -webkit-transform: translate(0, 0); transition: 0ms ease; -webkit-transition: 0ms ease;")
 
     describe ".getCSSVal()", ->
       it "仮に webkit だとしたら、transform を入れると \"-webkit-transform\" が返ってくる", ->

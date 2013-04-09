@@ -7,10 +7,8 @@ define ->
         @saveProp = {}
 
       getPage: (event, page) ->
-        # タッチイベントがある
         if event.changedTouches
           event.changedTouches[0][page]
-        # タッチイベントがない
         else
           event[page]
 
@@ -18,6 +16,8 @@ define ->
         if props instanceof Array
           for prop in props
             @div.style[prop] isnt undefined
+        else if typeof props is "string"
+          @div.style[prop] isnt undefined
         else
           return null
 
@@ -27,12 +27,13 @@ define ->
         if _saveProp
           style[_saveProp] = val
         else if style[prop] isnt undefined
-          saveProp[prop] = prop
+          @saveProp[prop] = prop
           style[prop] = val
         else
           for prefix in @prefixes
             _prop = @ucFirst(prefix) + @ucFirst(prop)
 
+            # @prefixes とマッチした
             if style[_prop] isnt undefined
               @saveProp[prop] = _prop
               style[_prop] = val
@@ -45,7 +46,7 @@ define ->
         # transform とかデフォで対応してるんだったらそれを使う
         else if @div.style[prop] isnt undefined
           return prop
-        # prefix つきじゃないとダメなら優しく prefix つけてあげる
+        # prefix つきじゃないとダメなら優しく prefix をつけてあげる
         else
           for prefix in @prefixes
             _prop = @ucFirst(prefix) + @ucFirst(prop)
