@@ -193,8 +193,8 @@
       } else if (!this.el) {
         throw new Error("Element Not Found");
       }
-      this.distance = this.opts.distance || null;
-      this.maxPoint = this.opts.maxPoint || null;
+      this.distance = null;
+      this.maxPoint = null;
       this.currentPoint = this.currentX = this.maxX = 0;
       this.scrolling = this.moveReady = this.startPageX = this.startPageY = this.basePageX = this.startTime = null;
       this.gestureStart = false;
@@ -248,30 +248,28 @@
     };
 
     Flickable.prototype.refresh = function() {
-      var _this = this;
+      var getMaxPoint,
+        _this = this;
 
-      this.maxPoint = (function() {
+      getMaxPoint = function() {
         var childNodes, i, itemLength, node, _i, _len;
 
-        if (_this.maxPoint === null) {
-          childNodes = _this.el.childNodes;
-          itemLength = 0;
-          for (i = _i = 0, _len = childNodes.length; _i < _len; i = ++_i) {
-            node = childNodes[i];
-            if (node.nodeType === 1) {
-              itemLength++;
-            }
+        childNodes = _this.el.childNodes;
+        itemLength = 0;
+        for (i = _i = 0, _len = childNodes.length; _i < _len; i = ++_i) {
+          node = childNodes[i];
+          if (node.nodeType === 1) {
+            itemLength++;
           }
-          if (itemLength > 0) {
-            itemLength--;
-          }
-          return itemLength;
-        } else {
-          return _this.maxPoint;
         }
-      })();
-      this.distance = this.distance === null ? this.el.scrollWidth / (this.maxPoint + 1) : this.distance;
-      this.maxX = "-" + (this.distance * this.maxPoint);
+        if (itemLength > 0) {
+          itemLength--;
+        }
+        return itemLength;
+      };
+      this.maxPoint = this.opts.maxPoint === void 0 ? getMaxPoint() : this.opts.maxPoint;
+      this.distance = this.opts.distance === void 0 ? this.el.scrollWidth / (this.maxPoint + 1) : this.opts.distance;
+      this.maxX = -this.distance * this.maxPoint;
       return this.moveToPoint();
     };
 
@@ -485,7 +483,7 @@
       to = x;
       duration = parseInt(duration, 10);
       easing = function(time, duration) {
-        return "-" + ((time /= duration) * (time - 2));
+        return -(time /= duration) * (time - 2);
       };
       return timer = setInterval(function() {
         var now, pos, time;

@@ -158,8 +158,8 @@ do (root = this, factory = (window, documentd) ->
         throw new Error("Element Not Found")
 
       # Set Options
-      @distance     = @opts.distance or null
-      @maxPoint     = @opts.maxPoint or null
+      @distance     = null
+      @maxPoint     = null
 
       @currentPoint = @currentX  = @maxX       = 0
       @scrolling    = @moveReady = @startPageX = @startPageY = @basePageX = @startTime = null
@@ -209,21 +209,20 @@ do (root = this, factory = (window, documentd) ->
           @_click(event)
 
     refresh: ->
-      @maxPoint = do =>
-        if @maxPoint is null
-          childNodes = @el.childNodes
-          itemLength = 0
+      getMaxPoint = =>
+        childNodes = @el.childNodes
+        itemLength = 0
 
-          for node, i in childNodes
-            if node.nodeType is 1 then itemLength++
+        for node, i in childNodes
+          if node.nodeType is 1 then itemLength++
 
-          if itemLength > 0 then itemLength--
+        if itemLength > 0 then itemLength--
 
-          return itemLength
-        else
-          @maxPoint
-      @distance = if @distance is null then @el.scrollWidth / (@maxPoint + 1) else @distance
-      @maxX     = "-#{@distance * @maxPoint}"
+        return itemLength
+
+      @maxPoint = if @opts.maxPoint is undefined then getMaxPoint() else @opts.maxPoint
+      @distance = if @opts.distance is undefined then @el.scrollWidth / (@maxPoint + 1) else @opts.distance
+      @maxX     = -@distance * @maxPoint
 
       @moveToPoint()
 
@@ -396,7 +395,7 @@ do (root = this, factory = (window, documentd) ->
       to       = x
       duration = parseInt(duration, 10)
       easing   = (time, duration) ->
-        "-#{(time /= duration) * (time - 2)}"
+        -(time /= duration) * (time - 2)
       timer    = setInterval ->
         time = new Date() - begin
 
