@@ -10,7 +10,7 @@ define(["zepto", "mocha", "chai", "../src/helper"], function($, Mocha, Chai, Hel
     return describe("Helper Class", function() {
       var helper;
 
-      helper = new Helper();
+      helper = new window.Helper();
       describe(".getPage()", function() {
         var el, moveEvent;
 

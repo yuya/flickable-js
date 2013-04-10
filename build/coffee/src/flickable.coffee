@@ -19,10 +19,7 @@ do (root = this, factory = (window, documentd) ->
           if @div.style[prop] isnt undefined then return true
         return false
       else if typeof props is "string"
-        if @div.style[prop] isnt undefined
-          return true
-        else
-          return false
+        if @div.style[prop] isnt undefined then true else false
       else
         return null
 
@@ -73,7 +70,7 @@ do (root = this, factory = (window, documentd) ->
         return null
 
     triggerEvent: (element, type, bubbles, cancelable, data) ->
-      event = document.createElement("Event")
+      event = document.createEvent("Event")
       event.initEvent(type, bubbles, cancelable)
 
       if data
@@ -87,19 +84,18 @@ do (root = this, factory = (window, documentd) ->
       ios     = ua.match(/(?:iphone\sos|ip[oa]d.*os)\s([\d_]+)/)
       android = ua.match(/(android)\s+([\d.]+)/)
 
-      browserName = do ->
-        if !!ios
-          return "ios"
-        else if !!android
-          return "android"
-        else
-          return "pc"
-
+      # browserName = do ->
+      #   if !!ios
+      #     return "ios"
+      #   else if !!android
+      #     return "android"
+      #   else
+      #     return "pc"
+      browserName    = if !!ios then "ios" else if !!android then "android" else "pc"
       browserVersion = do ->
         if not ios and not android then return null
 
-        version = (ios or android).pop().split(/\D/).join(".")
-        return parseFloat(version)
+        parseFloat((ios or android).pop().split(/\D/).join("."))
 
       return {
         name:     browserName
@@ -136,11 +132,7 @@ do (root = this, factory = (window, documentd) ->
         transform3d:   hasTransform3d
         transform:     hasTransform
         transition:    hasTransition
-        cssAnimation:  do ->
-          if hasTransform3d or hasTransform and hasTransition
-            true
-          else
-            false
+        cssAnimation: if hasTransform3d or hasTransform and hasTransition then true else false
       }
     checkEvents: ->
       hasTouch = @checkSupport.touch
@@ -161,7 +153,7 @@ do (root = this, factory = (window, documentd) ->
       @events  = @helper.checkEvents()
 
       if typeof @el is "string"
-        @el = document.querySelector(el)
+        @el = document.querySelector(@el)
       else if not @el
         throw new Error("Element Not Found")
 
@@ -202,11 +194,11 @@ do (root = this, factory = (window, documentd) ->
         document.addEventListener "gesturestart", => @gestureStart = true
         document.addEventListener "gestureend",   => @gestureStart = false
 
-      @el.addEventListener(@events.start, @, false)
       @refresh()
+      @el.addEventListener(@events.start, @, false)
 
     handleEvent: (event) ->
-      switch event.typeof
+      switch event.type
         when @events.start
           @_touchStart(event)
         when @events.move
@@ -268,12 +260,16 @@ do (root = this, factory = (window, documentd) ->
       else
         @opts.useJsAnimate = true
 
-      @_setX("-#{@currentPoint * @distance}", duration)
+      @_setX(- @currentPoint * @distance, duration)
 
-      # TODO: ここに moveend 的なカスタムイベントを発火させる処理
+      if (beforePoint isnt @currentPoint)
+        # TODO: moveend 的なほうは消す雰囲気醸し出す
+        @helper.triggerEvent(@el, "flmoveend", true, false)
+        @helper.triggerEvent(@el, "flpointmove", true, false)
 
     _setX: (x, duration = @opts.transition["duration"]) ->
       @currentX = x
+      console.log typeof @currentX
 
       if @support.cssAnimation
         @helper.setStyle(@el,
@@ -322,15 +318,20 @@ do (root = this, factory = (window, documentd) ->
         distX = pageX - @basePageX
         newX = @currentX + distX
 
+        console.log typeof pageX
+        console.log typeof @basePageX
+
+        console.log typeof distX
+        console.log typeof @currentX
+
         if newX >= 0 or newX < @maxX then newX = Math.round(@currentX + distX / 3)
 
-        @directionX = do =>
-          if distX is 0
-            @directionX
-          else
-            if distX > 0 then -1 else 1
+        @directionX = if distX is 0 then @directionX else if distX > 0 then -1 else 1
 
-        isPrevent = not helper.triggerEvent(@el, "fltouchmove", true, true,
+        console.log newX
+        console.log @directionX
+
+        isPrevent = not @helper.triggerEvent(@el, "fltouchmove", true, true,
           delta:     distX
           direction: @directionX
         )
@@ -363,17 +364,17 @@ do (root = this, factory = (window, documentd) ->
       @el.removeEventListener(@events.move, @, false)
       document.removeEventListener(@events.end, @, false)
 
-      if not @scrolling then return
+      # if not @scrolling then return
 
       newPoint = do =>
-        point = -@currentX / @distance
+        point = -(@currentX) / @distance
+        console.log @currentX
+        console.log @distance
+        console.log point
 
-        if @directionX > 0
-          Math.ceil(point)
-        else if @directionX < 0
-          Math.floor(point)
-        else
-          Math.round(point)
+        if @directionX > 0 then Math.ceil(point)  else if @directionX < 0 then Math.floor(point) else Math.round(point)
+
+      console.log newPoint
 
       if newPoint < 0
         newPoint = 0
@@ -429,6 +430,7 @@ do (root = this, factory = (window, documentd) ->
     destroy: ->
       @el.removeEventListener(@events.start, @, false)
 
+  window["Helper"] = Helper
   window[NS] = Flickable
 
 ) ->

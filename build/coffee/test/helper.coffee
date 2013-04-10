@@ -9,7 +9,7 @@ define [
     expect = Chai.expect
 
     describe "Helper Class", ->
-      helper = new Helper()
+      helper = new window.Helper()
 
       describe ".getPage()", ->
         el = $("<div>")
