@@ -143,7 +143,8 @@ define(function() {
         })();
         return {
           name: browserName,
-          version: browserVersion
+          version: browserVersion,
+          isLegacy: !!android && browserVersion < 3
         };
       };
 
@@ -155,6 +156,7 @@ define(function() {
         hasTransition = this.hasProp(["transitionProperty", "WebkitTransitionProperty", "MozTransitionProperty", "msTransitionProperty", "OTransitionProperty"]);
         return {
           touch: "ontouchstart" in global,
+          eventListener: "addEventListener" in global,
           transform3d: hasTransform3d,
           transform: hasTransform,
           transition: hasTransition,

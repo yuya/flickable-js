@@ -103,8 +103,9 @@ define ->
           return parseFloat(version)
 
         return {
-          name: browserName
-          version: browserVersion
+          name:     browserName
+          version:  browserVersion
+          isLegacy: !!android and browserVersion < 3
         }
 
       checkSupport: ->
@@ -131,11 +132,12 @@ define ->
         ])
 
         return {
-          touch:        "ontouchstart" of global
-          transform3d:  hasTransform3d
-          transform:    hasTransform
-          transition:   hasTransition
-          cssAnimation: do ->
+          touch:         "ontouchstart" of global
+          eventListener: "addEventListener" of global
+          transform3d:   hasTransform3d
+          transform:     hasTransform
+          transition:    hasTransition
+          cssAnimation:  do ->
             if hasTransform3d or hasTransform and hasTransition
               true
             else
@@ -149,5 +151,3 @@ define ->
           touchMove:  if hasTouch then "touchmove"  else "mousemove"
           touchEnd:   if hasTouch then "touchend"   else "mouseup"
         }
-
-

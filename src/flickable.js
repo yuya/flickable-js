@@ -6,10 +6,13 @@ define(["../src/helper"], function(Helper) {
 
     return Flickable = (function() {
       function Flickable(element, opts) {
+        var _this = this;
+
         if (opts == null) {
           opts = {};
         }
         this.el = element;
+        this.opts = opts;
         this.helper = new Helper();
         this.browser = this.helper.checkBrowser();
         this.support = this.helper.checkSupport();
@@ -19,17 +22,45 @@ define(["../src/helper"], function(Helper) {
         } else if (!this.el) {
           throw new Error("Element Not Found");
         }
-        this.distance = !opts.distance ? null : opts.distance;
-        this.maxPoint = !opts.maxPoint ? null : opts.maxPoint;
-        opts.transition = opts.transition || {};
-        this.transition = {
-          duration: !opts.transition["duration"] ? "330ms" : opts.transition["duration"],
-          timingFunction: !opts.transition["timingFunction"] ? "cubic-bezier(0, 0, 0, 0.25, 1)" : opts.transition["timingFunction"]
+        this.distance = this.opts.distance || null;
+        this.maxPoint = this.opts.maxPoint || null;
+        this.currentPoint = this.currentX = this.maxX = 0;
+        this.scrolling = this.moveReady = this.startPageX = this.startPageY = this.basePageX = this.startTime = null;
+        this.gestureStart = false;
+        this.opts.use3d = this.opts.disable3d ? false : this.support.transform3d;
+        this.opts.useJsAnimate = false;
+        this.opts.disableTouch = this.opts.disableTouch || false;
+        this.opts.disable3d = this.opts.disable3d || false;
+        this.opts.transition = this.opts.transition || {};
+        this.opts.transition = {
+          timingFunction: this.opts.transition["timingFunction"] || "cubic-bezier(0.23, 1, 0.32, 1)",
+          duration: (function() {
+            return this.opts.transition["duration"] || (this.browser.isLegacy ? "200ms" : "330ms");
+          })()
         };
-        this.currentPoint = 0;
-        this.currentX = 0;
+        if (this.support.cssAnimation) {
+          this.helper.setStyle(this.el, {
+            transitionProperty: this.helper.getCSSVal("transform"),
+            transitionDuration: "0ms",
+            transitionTimingFunction: this.opts.transition["timingFunction"],
+            transform: this._getTranslate(0)
+          });
+        } else {
+          this.helper.setStyle(this.el, {
+            position: "relative",
+            left: "0px"
+          });
+        }
+        if (this.support.eventListener) {
+          document.addEventListener("gesturestart", function() {
+            return _this.gestureStart = true;
+          });
+          document.addEventListener("gestureend", function() {
+            return _this.gestureStart = false;
+          });
+        }
         this.el.addEventListener(this.events.touchStart, this, false);
-        return this;
+        this.refresh();
       }
 
       Flickable.prototype.handleEvent = function(event) {
@@ -45,7 +76,38 @@ define(["../src/helper"], function(Helper) {
         }
       };
 
-      Flickable.prototype.refresh = function() {};
+      Flickable.prototype.refresh = function() {
+        var _this = this;
+
+        this.maxPoint = (function() {
+          var childNodes, itemLength, node, _i, _len;
+
+          if (_this.maxPoint === null) {
+            childNodes = _this.el.childNodes;
+            itemLength = 0;
+            for (_i = 0, _len = childNodes.length; _i < _len; _i++) {
+              node = childNodes[_i];
+              if (node.nodeType === 1) {
+                itemLength++;
+              }
+            }
+            if (itemLength > 0) {
+              return itemLength--;
+            }
+          } else {
+            return _this.maxPoint;
+          }
+        })();
+        this.distance = (function() {
+          if (_this.distance === null) {
+            return _this.el.scrollWidth / (_this.maxPoint + 1);
+          } else {
+            return _this.distance;
+          }
+        })();
+        this.maxX = "-" + (this.distance * this.maxPoint);
+        return this.moveToPoint();
+      };
 
       Flickable.prototype.hasPrev = function() {
         return this.currentPoint > 0;
@@ -69,19 +131,221 @@ define(["../src/helper"], function(Helper) {
         return this.moveToPoint(this.currentPoint + 1);
       };
 
-      Flickable.prototype.destroy = function() {
-        return this.el.removeEventListener(this.events.touchStart, this, false);
+      Flickable.prototype.moveToPoint = function(point, duration) {
+        var beforePoint;
+
+        if (point == null) {
+          point = this.currentPoint;
+        }
+        if (duration == null) {
+          duration = this.opts.transition["duration"];
+        }
+        beforePoint = this.currentPoint;
+        if (point < 0) {
+          this.currentPoint = 0;
+        } else if (point > this.maxPoint) {
+          this.currentPoint = this.maxPoint;
+        } else {
+          this.currentPoint = parseInt(point, 10);
+        }
+        if (this.support.cssAnimation) {
+          this.helper.setStyle(this.el, {
+            transitionDuration: duration
+          });
+        } else {
+          this.opts.useJsAnimate = true;
+        }
+        return this._setX("-" + (this.currentPoint * this.distance), duration);
       };
 
-      Flickable.prototype._touchStart = function(event) {};
+      Flickable.prototype._setX = function(x, duration) {
+        if (duration == null) {
+          duration = this.opts.transition["duration"];
+        }
+        this.currentX = x;
+        if (this.support.cssAnimation) {
+          return this.helper.setStyle(this.el, {
+            transform: this._getTranslate(x)
+          });
+        } else if (this.opts.useJsAnimate) {
+          return this._jsAnimate(x, duration);
+        } else {
+          return this.el.style.left = "" + x + "px";
+        }
+      };
 
-      Flickable.prototype._touchMove = function(event) {};
+      Flickable.prototype._touchStart = function(event) {
+        if (this.opts.disableTouch || this.gestureStart) {
+          return;
+        }
+        this.el.addEventListener(this.events.touchMove, this, false);
+        document.addEventListener(this.events.touchEnd, this, false);
+        if (!this.events.touch) {
+          event.preventDefault();
+        }
+        if (this.support.cssAnimation) {
+          this.helper.setStyle(this.el, {
+            transitionDuration: "0ms"
+          });
+        } else {
+          this.opts.useJsAnimate = false;
+        }
+        this.scrolling = true;
+        this.moveReady = false;
+        this.startPageX = this.helper.getPage(event, "pageX");
+        this.startPageY = this.helper.getPage(event, "pageY");
+        this.basePageX = this.startPageX;
+        this.directionX = 0;
+        this.startTime = event.timeStamp;
+        return this.helper.triggerEvent(this.el, "fltouchstart", true, false);
+      };
 
-      Flickable.prototype._touchEnd = function(event) {};
+      Flickable.prototype._touchMove = function(event) {
+        var deltaX, deltaY, distX, isPrevent, newX, pageX, pageY,
+          _this = this;
+
+        if (!this.scrolling || this.gestureStart) {
+          return;
+        }
+        pageX = this.helper.getPage(event, "pageX");
+        pageY = this.helper.getPage(event, "pageY");
+        if (this.moveReady) {
+          event.preventDefault();
+          event.stopPropagation();
+          distX = pageX - this.basePageX;
+          newX = this.currentX + distX;
+          if (newX >= 0 || newX < this.maxX) {
+            newX = Math.round(this.currentX + distX / 3);
+          }
+          this.directionX = (function() {
+            if (distX === 0) {
+              return _this.directionX;
+            } else {
+              if (distX > 0) {
+                return -1;
+              } else {
+                return 1;
+              }
+            }
+          })();
+          isPrevent = !helper.triggerEvent(this.el, "fltouchmove", true, true, {
+            delta: distX,
+            direction: this.directionX
+          });
+          if (isPrevent) {
+            this._touchAfter({
+              moved: false,
+              originalPoint: this.currentPoint,
+              newPoint: this.currentPoint,
+              cancelled: true
+            });
+          } else {
+            this._setX(newX);
+          }
+        } else {
+          deltaX = Math.abs(pageX - this.startPageX);
+          deltaY = Math.abs(pageY - this.startPageY);
+          if (deltaX > 5) {
+            event.preventDefault();
+            event.stopPropagation();
+            this.moveReady = true;
+            this.el.addEventListener("click", this, true);
+          } else if (deltaY > 5) {
+            this.scrolling = false;
+          }
+        }
+        return this.basePageX = pageX;
+      };
+
+      Flickable.prototype._touchEnd = function(event) {
+        var newPoint,
+          _this = this;
+
+        this.el.removeEventListener(this.events.touchMove, this, false);
+        document.removeEventListener(this.events.touchEnd, this, false);
+        if (!this.scrolling) {
+          return;
+        }
+        newPoint = (function() {
+          var point;
+
+          point = -_this.currentX / _this.distance;
+          if (_this.directionX > 0) {
+            return Math.ceil(point);
+          } else if (_this.directionX < 0) {
+            return Math.floor(point);
+          } else {
+            return Math.round(point);
+          }
+        })();
+        if (newPoint < 0) {
+          newPoint = 0;
+        } else if (newPoint > this.maxPoint) {
+          newPoint = this.maxPoint;
+        }
+        this._touchAfter({
+          moved: newPoint !== this.currentPoint,
+          originalPoint: this.currentPoint,
+          newPoint: newPoint,
+          cancelled: false
+        });
+        return this.moveToPoint(newPoint);
+      };
+
+      Flickable.prototype._touchAfter = function(params) {
+        var _this = this;
+
+        this.scrolling = false;
+        this.moveReady = false;
+        global.setTimeout(function() {
+          return _this.el.removeEventListener("click", _this, true);
+        }, 200);
+        return this.helper.triggerEvent(this.el, "fltouchend", true, false, params);
+      };
 
       Flickable.prototype._click = function(event) {
         event.stopPropagation();
         return event.preventDefault();
+      };
+
+      Flickable.prototype._getTranslate = function(x) {
+        if (this.opts.use3d) {
+          return "translate3d(" + x + "px, 0, 0)";
+        } else {
+          return "translate(" + x + "px, 0)";
+        }
+      };
+
+      Flickable.prototype._jsAnimate = function(x, duration) {
+        var begin, easing, from, timer, to;
+
+        if (duration == null) {
+          duration = this.opts.transition["duration"];
+        }
+        begin = +new Date();
+        from = parseInt(this.el.style.left, 10);
+        to = x;
+        duration = parseInt(duration, 10);
+        easing = function(time, duration) {
+          return "-" + ((time /= duration) * (time - 2));
+        };
+        return timer = setInterval(function() {
+          var now, pos, time;
+
+          time = new Date() - begin;
+          if (time > duration) {
+            clearInterval(timer);
+            now = to;
+          } else {
+            pos = easing(time, duration);
+            now = pos * (to - from) + from;
+          }
+          return this.el.style.left = "" + now + "px";
+        }, 10);
+      };
+
+      Flickable.prototype.destroy = function() {
+        return this.el.removeEventListener(this.events.touchStart, this, false);
       };
 
       return Flickable;
