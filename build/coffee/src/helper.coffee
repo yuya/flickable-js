@@ -27,25 +27,30 @@ define ->
         else
           return null
 
-      setStyle: (style, prop, val) ->
-        _saveProp = @saveProp[prop]
+      setStyle: (element, styles) ->
+        style       = element.style
+        hasSaveProp = @saveProp[prop]
 
-        if _saveProp
-          style[_saveProp] = val
-        else if style[prop] isnt undefined
-          @saveProp[prop] = prop
-          style[prop] = val
-        else
-          for prefix in @prefixes
-            _prop = @ucFirst(prefix) + @ucFirst(prop)
+        set = (style, prop, val) =>
+          if hasSaveProp
+            style[hasSaveProp] = val
+          else if style[prop] isnt undefined
+            @saveProp[prop] = prop
+            style[prop] = val
+          else
+            for prefix in @prefixes
+              _prop = @ucFirst(prefix) + @ucFirst(prop)
 
-            # @prefixes とマッチした
-            if style[_prop] isnt undefined
-              @saveProp[prop] = _prop
-              style[_prop] = val
+              # @prefixes とマッチした
+              if style[_prop] isnt undefined
+                @saveProp[prop] = _prop
+                style[_prop] = val
 
-              return true
-          return false
+                return true
+            return false
+
+        for prop of styles
+          set(style, prop, styles[prop])
 
       getCSSVal: (prop) ->
         if typeof prop isnt "string"
@@ -68,6 +73,16 @@ define ->
         else
           return null
 
+      triggerEvent: (element, type, bubbles, cancelable, data) ->
+        event = document.createElement("Event")
+        event.initEvent(type, bubbles, cancelable)
+
+        if data
+          for d of data
+            event[d] = data[d]
+
+        element.dispatchEvent(event)
+
       checkBrowser: ->
         ua      = global.navigator.userAgent.toLowerCase()
         ios     = ua.match(/(?:iphone\sos|ip[oa]d.*os)\s([\d_]+)/)
@@ -88,7 +103,7 @@ define ->
           return parseFloat(version)
 
         return {
-          browser: browserName
+          name: browserName
           version: browserVersion
         }
 
@@ -125,6 +140,14 @@ define ->
               true
             else
               false
+        }
+      checkTouchEvents: ->
+        hasTouch = @checkSupport.touch
+
+        return {
+          touchStart: if hasTouch then "touchstart" else "mousedown"
+          touchMove:  if hasTouch then "touchmove"  else "mousemove"
+          touchEnd:   if hasTouch then "touchend"   else "mouseup"
         }
 
 

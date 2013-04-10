@@ -54,33 +54,22 @@ define(["zepto", "mocha", "chai", "../src/helper"], function($, Mocha, Chai, Hel
         });
       });
       describe(".setStyle()", function() {
-        var el, setStyles;
+        var el;
 
         el = document.createElement("div");
-        setStyles = function(styles) {
-          var prop, style, value, _results;
-
-          style = el.style;
-          _results = [];
-          for (prop in styles) {
-            value = styles[prop];
-            _results.push(helper.setStyle(style, prop, value));
-          }
-          return _results;
-        };
         beforeEach(function(done) {
           el.removeAttribute("style");
           helper.saveProp = {};
           return done();
         });
         it("display: none; を追加したから style=\"diplay: none;\" ってなってるはず", function() {
-          setStyles({
+          helper.setStyle(el, {
             display: "block"
           });
           return expect(el.getAttribute("style")).to.equal("display: block;");
         });
         it("プロパティ複数指定したら、指定した順番に style 属性に入ってるはず", function() {
-          setStyles({
+          helper.setStyle(el, {
             display: "none",
             width: "100px",
             height: "100px",
@@ -89,7 +78,7 @@ define(["zepto", "mocha", "chai", "../src/helper"], function($, Mocha, Chai, Hel
           return expect(el.getAttribute("style")).to.equal("display: none; width: 100px; height: 100px; margin: 0px auto;");
         });
         return it("prefix が必要なやつはプロパティはよしなに prefix つけて、よしなに纏めてくれるはず", function() {
-          setStyles({
+          helper.setStyle(el, {
             width: "100px",
             height: "100px",
             transform: "translate(0, 0)",
@@ -125,10 +114,16 @@ define(["zepto", "mocha", "chai", "../src/helper"], function($, Mocha, Chai, Hel
           return expect(helper.ucFirst([1, 2, 3])).to.be.a("null");
         });
       });
+      describe(".triggerEvent()", function() {
+        return it("テスト書く書く詐欺", function() {});
+      });
       describe(".checkBrowser()", function() {
         return it("テスト書く書く詐欺", function() {});
       });
-      return describe(".checkSupport()", function() {
+      describe(".checkSupport()", function() {
+        return it("テスト書く書く詐欺", function() {});
+      });
+      return describe(".checkTouchEvents()", function() {
         return it("テスト書く書く詐欺", function() {});
       });
     });

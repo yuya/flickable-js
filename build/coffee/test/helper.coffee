@@ -48,11 +48,6 @@ define [
 
       describe ".setStyle()", ->
         el = document.createElement("div")
-        setStyles = (styles) ->
-          style = el.style
-
-          for prop, value of styles
-            helper.setStyle(style, prop, value)
 
         beforeEach (done) ->
           el.removeAttribute("style")
@@ -60,13 +55,12 @@ define [
           done()
 
         it ("display: none; を追加したから style=\"diplay: none;\" ってなってるはず"), ->
-          # before ->
-          setStyles(
+          helper.setStyle(el,
             display: "block"
           )
           expect(el.getAttribute("style")).to.equal("display: block;")
         it ("プロパティ複数指定したら、指定した順番に style 属性に入ってるはず"), ->
-          setStyles(
+          helper.setStyle(el,
             display: "none"
             width: "100px"
             height: "100px"
@@ -74,7 +68,7 @@ define [
           )
           expect(el.getAttribute("style")).to.equal("display: none; width: 100px; height: 100px; margin: 0px auto;")
         it ("prefix が必要なやつはプロパティはよしなに prefix つけて、よしなに纏めてくれるはず"), ->
-          setStyles(
+          helper.setStyle(el,
             width: "100px"
             height: "100px"
             transform: "translate(0, 0)"
@@ -103,8 +97,14 @@ define [
         it "String じゃないものだったら null を返す", ->
           expect(helper.ucFirst([1..3])).to.be.a("null")
 
+      describe ".triggerEvent()", ->
+        it "テスト書く書く詐欺", ->
+
       describe ".checkBrowser()", ->
         it "テスト書く書く詐欺", ->
 
       describe ".checkSupport()", ->
+        it "テスト書く書く詐欺", ->
+
+      describe ".checkTouchEvents()", ->
         it "テスト書く書く詐欺", ->

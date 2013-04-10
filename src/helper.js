@@ -41,28 +41,39 @@ define(function() {
         }
       };
 
-      Helper.prototype.setStyle = function(style, prop, val) {
-        var prefix, _i, _len, _prop, _ref, _saveProp;
+      Helper.prototype.setStyle = function(element, styles) {
+        var hasSaveProp, prop, set, style, _results,
+          _this = this;
 
-        _saveProp = this.saveProp[prop];
-        if (_saveProp) {
-          return style[_saveProp] = val;
-        } else if (style[prop] !== void 0) {
-          this.saveProp[prop] = prop;
-          return style[prop] = val;
-        } else {
-          _ref = this.prefixes;
-          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-            prefix = _ref[_i];
-            _prop = this.ucFirst(prefix) + this.ucFirst(prop);
-            if (style[_prop] !== void 0) {
-              this.saveProp[prop] = _prop;
-              style[_prop] = val;
-              return true;
+        style = element.style;
+        hasSaveProp = this.saveProp[prop];
+        set = function(style, prop, val) {
+          var prefix, _i, _len, _prop, _ref;
+
+          if (hasSaveProp) {
+            return style[hasSaveProp] = val;
+          } else if (style[prop] !== void 0) {
+            _this.saveProp[prop] = prop;
+            return style[prop] = val;
+          } else {
+            _ref = _this.prefixes;
+            for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+              prefix = _ref[_i];
+              _prop = _this.ucFirst(prefix) + _this.ucFirst(prop);
+              if (style[_prop] !== void 0) {
+                _this.saveProp[prop] = _prop;
+                style[_prop] = val;
+                return true;
+              }
             }
+            return false;
           }
-          return false;
+        };
+        _results = [];
+        for (prop in styles) {
+          _results.push(set(style, prop, styles[prop]));
         }
+        return _results;
       };
 
       Helper.prototype.getCSSVal = function(prop) {
@@ -93,6 +104,19 @@ define(function() {
         }
       };
 
+      Helper.prototype.triggerEvent = function(element, type, bubbles, cancelable, data) {
+        var d, event;
+
+        event = document.createElement("Event");
+        event.initEvent(type, bubbles, cancelable);
+        if (data) {
+          for (d in data) {
+            event[d] = data[d];
+          }
+        }
+        return element.dispatchEvent(event);
+      };
+
       Helper.prototype.checkBrowser = function() {
         var android, browserName, browserVersion, ios, ua;
 
@@ -118,7 +142,7 @@ define(function() {
           return parseFloat(version);
         })();
         return {
-          browser: browserName,
+          name: browserName,
           version: browserVersion
         };
       };
@@ -141,6 +165,17 @@ define(function() {
               return false;
             }
           })()
+        };
+      };
+
+      Helper.prototype.checkTouchEvents = function() {
+        var hasTouch;
+
+        hasTouch = this.checkSupport.touch;
+        return {
+          touchStart: hasTouch ? "touchstart" : "mousedown",
+          touchMove: hasTouch ? "touchmove" : "mousemove",
+          touchEnd: hasTouch ? "touchend" : "mouseup"
         };
       };
 
