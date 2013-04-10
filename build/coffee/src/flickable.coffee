@@ -5,17 +5,12 @@ define [
     "use strict"
 
     class Flickable
-      constructor: (el, opts = {}) ->
-        @el = el
-        @helper = new Helper()
+      constructor: (element, opts = {}) ->
+        @el      = element
+        @helper  = new Helper()
+        @browser = @helper.checkBrowser()
         @support = @helper.checkSupport()
-        @events =
-          touchStart: if @support.touch then "touchstart" else "mousedown"
-          touchMove: if @support.touch then "touchmove" else "mousemove"
-          touchEnd: if @support.touch then "touchend" else "mouseup"
-
-        console.log @support.touch
-        console.log @support.transform3d
+        @events  = @helper.checkTouchEvents()
 
         if typeof @el is "string"
           @el = document.querySelector(el)
@@ -23,7 +18,6 @@ define [
           throw new Error("Element Not Found")
 
         # Set Options
-        opts = opts || {}
         @distance = if not opts.distance then null else opts.distance
         @maxPoint = if not opts.maxPoint then null else opts.maxPoint
 
@@ -41,16 +35,33 @@ define [
 
       handleEvent: (event) ->
         switch event.typeof
-          when touchStartEvent
+          when @events.touchStart
             @_touchStart(event)
-          when touchMoveEvent
+          when @events.touchMove
             @_touchMove(event)
-          when touchEndEvent
+          when @events.touchEnd
             @_touchEnd(event)
           when "click"
             @_click(event)
 
       refresh: ->
+
+      hasPrev: ->
+        @currentPoint > 0
+
+      hasNext: ->
+        @currentPoint < @maxPoint
+
+      toPrev: ->
+        if not @hasPrev() then return
+        @moveToPoint(@currentPoint - 1)
+
+      toNext: ->
+        if not @hasNext() then return
+        @moveToPoint(@currentPoint + 1) 
+
+      destroy: ->
+        @el.removeEventListener(@events.touchStart, @, false)
 
       _touchStart: (event) ->
 
@@ -61,38 +72,3 @@ define [
       _click: (event) ->
         event.stopPropagation()
         event.preventDefault()
-
-      _checkSupport: ->
-        hasTransform3d = @helper.hasProp([
-            "perspectiveProperty"
-            "WebkitPerspective"
-            "MozPerspective"
-            "msPerspective"
-            "OPerspective"
-        ])
-        hasTransform = @helper.hasProp([
-            "transformProperty"
-            "WebkitTransform"
-            "MozTransform"
-            "msTransform"
-            "OTransform"
-        ])
-        hasTransition = @helper.hasProp([
-            "transitionProperty"
-            "WebkitTransitionProperty"
-            "MozTransitionProperty"
-            "msTransitionProperty"
-            "OTransitionProperty"
-        ])
-
-        return {
-            touch: "ontouchstart" of global
-            transform3d: hasTransform3d
-            transform: hasTransform
-            transition: hasTransition
-            cssAnimation: do ->
-              if hasTransform3d or hasTransform and hasTransition
-                true
-              else
-                false
-        }

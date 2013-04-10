@@ -5,26 +5,20 @@ define(["../src/helper"], function(Helper) {
     var Flickable;
 
     return Flickable = (function() {
-      function Flickable(el, opts) {
+      function Flickable(element, opts) {
         if (opts == null) {
           opts = {};
         }
-        this.el = el;
+        this.el = element;
         this.helper = new Helper();
+        this.browser = this.helper.checkBrowser();
         this.support = this.helper.checkSupport();
-        this.events = {
-          touchStart: this.support.touch ? "touchstart" : "mousedown",
-          touchMove: this.support.touch ? "touchmove" : "mousemove",
-          touchEnd: this.support.touch ? "touchend" : "mouseup"
-        };
-        console.log(this.support.touch);
-        console.log(this.support.transform3d);
+        this.events = this.helper.checkTouchEvents();
         if (typeof this.el === "string") {
           this.el = document.querySelector(el);
         } else if (!this.el) {
           throw new Error("Element Not Found");
         }
-        opts = opts || {};
         this.distance = !opts.distance ? null : opts.distance;
         this.maxPoint = !opts.maxPoint ? null : opts.maxPoint;
         opts.transition = opts.transition || {};
@@ -40,11 +34,11 @@ define(["../src/helper"], function(Helper) {
 
       Flickable.prototype.handleEvent = function(event) {
         switch (event["typeof"]) {
-          case touchStartEvent:
+          case this.events.touchStart:
             return this._touchStart(event);
-          case touchMoveEvent:
+          case this.events.touchMove:
             return this._touchMove(event);
-          case touchEndEvent:
+          case this.events.touchEnd:
             return this._touchEnd(event);
           case "click":
             return this._click(event);
@@ -52,6 +46,32 @@ define(["../src/helper"], function(Helper) {
       };
 
       Flickable.prototype.refresh = function() {};
+
+      Flickable.prototype.hasPrev = function() {
+        return this.currentPoint > 0;
+      };
+
+      Flickable.prototype.hasNext = function() {
+        return this.currentPoint < this.maxPoint;
+      };
+
+      Flickable.prototype.toPrev = function() {
+        if (!this.hasPrev()) {
+          return;
+        }
+        return this.moveToPoint(this.currentPoint - 1);
+      };
+
+      Flickable.prototype.toNext = function() {
+        if (!this.hasNext()) {
+          return;
+        }
+        return this.moveToPoint(this.currentPoint + 1);
+      };
+
+      Flickable.prototype.destroy = function() {
+        return this.el.removeEventListener(this.events.touchStart, this, false);
+      };
 
       Flickable.prototype._touchStart = function(event) {};
 
@@ -62,27 +82,6 @@ define(["../src/helper"], function(Helper) {
       Flickable.prototype._click = function(event) {
         event.stopPropagation();
         return event.preventDefault();
-      };
-
-      Flickable.prototype._checkSupport = function() {
-        var hasTransform, hasTransform3d, hasTransition;
-
-        hasTransform3d = this.helper.hasProp(["perspectiveProperty", "WebkitPerspective", "MozPerspective", "msPerspective", "OPerspective"]);
-        hasTransform = this.helper.hasProp(["transformProperty", "WebkitTransform", "MozTransform", "msTransform", "OTransform"]);
-        hasTransition = this.helper.hasProp(["transitionProperty", "WebkitTransitionProperty", "MozTransitionProperty", "msTransitionProperty", "OTransitionProperty"]);
-        return {
-          touch: "ontouchstart" in global,
-          transform3d: hasTransform3d,
-          transform: hasTransform,
-          transition: hasTransition,
-          cssAnimation: (function() {
-            if (hasTransform3d || hasTransform && hasTransition) {
-              return true;
-            } else {
-              return false;
-            }
-          })()
-        };
       };
 
       return Flickable;
