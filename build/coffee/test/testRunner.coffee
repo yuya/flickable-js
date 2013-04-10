@@ -27,6 +27,7 @@ require [
   "chai"
 
   # test files
-  "./helper.js"
+  "test/helper"
+  "test/flickable"
 ], (Mocha, Chai) ->
   Mocha.run()

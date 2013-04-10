@@ -28,6 +28,6 @@ require.config({
   })()
 });
 
-require(["mocha", "chai", "./helper.js"], function(Mocha, Chai) {
+require(["mocha", "chai", "test/helper", "test/flickable"], function(Mocha, Chai) {
   return Mocha.run();
 });

@@ -2,127 +2,135 @@
 var __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
 define(["zepto", "mocha", "chai", "../src/helper"], function($, Mocha, Chai, Helper) {
-  var expect;
+  return (function(global, document) {
+    "use strict";
+    var expect;
 
-  expect = Chai.expect;
-  return describe("Helper Class", function() {
-    var helper;
+    expect = Chai.expect;
+    return describe("Helper Class", function() {
+      var helper;
 
-    helper = new Helper();
-    describe(".getPage()", function() {
-      var el, moveEvent;
+      helper = new Helper();
+      describe(".getPage()", function() {
+        var el, moveEvent;
 
-      el = $("<div>");
-      moveEvent = __indexOf.call(window, "ontouchstart") >= 0 ? "touchmove" : "mousemove";
-      it("click イベントが発火しただけだし pageX は 0 が返ってくる", function() {
-        el.on("click", function(event) {
-          return expect(helper.getPage(event, "pageX")).to.equal(0);
+        el = $("<div>");
+        moveEvent = __indexOf.call(window, "ontouchstart") >= 0 ? "touchmove" : "mousemove";
+        it("click イベントが発火しただけだし pageX は 0 が返ってくる", function() {
+          el.on("click", function(event) {
+            return expect(helper.getPage(event, "pageX")).to.equal(0);
+          });
+          return el.click();
         });
-        return el.click();
-      });
-      it("" + moveEvent + " イベントが発火しただけだし pageY は 0 が返ってくる", function() {
-        el.on(moveEvent, function(event) {
-          return expect(helper.getPage(event, "pageY")).to.equal(0);
+        it("" + moveEvent + " イベントが発火しただけだし pageY は 0 が返ってくる", function() {
+          el.on(moveEvent, function(event) {
+            return expect(helper.getPage(event, "pageY")).to.equal(0);
+          });
+          return el.click();
         });
-        return el.click();
-      });
-      return it("全く関係ない load イベントとかで取得しようとしても undefined とかじゃね シラネ", function() {
-        var evt;
+        return it("全く関係ない load イベントとかで取得しようとしても undefined とかじゃね シラネ", function() {
+          var evt;
 
-        evt = document.createEvent("Event");
-        evt.initEvent("load", false, false);
-        return expect(helper.getPage(evt, "pageX")).to.be.a("undefined");
+          evt = document.createEvent("Event");
+          evt.initEvent("load", false, false);
+          return expect(helper.getPage(evt, "pageX")).to.be.a("undefined");
+        });
+      });
+      describe(".hasProp()", function() {
+        it("先行実装な CSS Property の配列を渡すと存在するかチェケラする。今どき transform ならあるよね", function() {
+          var props;
+
+          props = ["transformProperty", "WebkitTransform", "MozTransform", "OTransform", "msTransform"];
+          return expect(helper.hasProp(props)).to.be["true"];
+        });
+        it("svgMatrixZ とかいうイミフな String を渡したら当然 false が返ってくる", function() {
+          var prop;
+
+          prop = "svgMatrixZ";
+          return expect(helper.hasProp(prop)).to.be["false"];
+        });
+        return it("Array でも String でもないのを渡されても困るので null を返す", function() {
+          return expect(helper.hasProp(void 0)).to.be.a("null");
+        });
+      });
+      describe(".setStyle()", function() {
+        var el, setStyles;
+
+        el = document.createElement("div");
+        setStyles = function(styles) {
+          var prop, style, value, _results;
+
+          style = el.style;
+          _results = [];
+          for (prop in styles) {
+            value = styles[prop];
+            _results.push(helper.setStyle(style, prop, value));
+          }
+          return _results;
+        };
+        beforeEach(function(done) {
+          el.removeAttribute("style");
+          helper.saveProp = {};
+          return done();
+        });
+        it("display: none; を追加したから style=\"diplay: none;\" ってなってるはず", function() {
+          setStyles({
+            display: "block"
+          });
+          return expect(el.getAttribute("style")).to.equal("display: block;");
+        });
+        it("プロパティ複数指定したら、指定した順番に style 属性に入ってるはず", function() {
+          setStyles({
+            display: "none",
+            width: "100px",
+            height: "100px",
+            margin: "0px auto"
+          });
+          return expect(el.getAttribute("style")).to.equal("display: none; width: 100px; height: 100px; margin: 0px auto;");
+        });
+        return it("prefix が必要なやつはプロパティはよしなに prefix つけて、よしなに纏めてくれるはず", function() {
+          setStyles({
+            width: "100px",
+            height: "100px",
+            transform: "translate(0, 0)",
+            transitionTimingFunction: "ease",
+            transitionDuration: "0ms"
+          });
+          return expect(el.getAttribute("style")).to.equal("width: 100px; height: 100px; -webkit-transform: translate(0, 0); transition: 0ms ease; -webkit-transition: 0ms ease;");
+        });
+      });
+      describe(".getCSSVal()", function() {
+        it("仮に webkit だとしたら、transform を入れると \"-webkit-transform\" が返ってくる", function() {
+          expect(helper.getCSSVal("transform")).to.be.a("string");
+          return expect(helper.getCSSVal("transform")).to.equal("-webkit-transform");
+        });
+        it("width とか prefix なしで余裕なプロパティいれるとありのまま木の実ナナで返ってくる", function() {
+          expect(helper.getCSSVal("width")).to.be.a("string");
+          return expect(helper.getCSSVal("width")).to.equal("width");
+        });
+        return it("うっかり配列とか入れたら null 返して激おこプンプン丸", function() {
+          return expect(helper.getCSSVal([1, 2, 3])).to.be.a("null");
+        });
+      });
+      describe(".ucFirst()", function() {
+        it("\"webkitTransform\" とか渡すと \"WebkitTransform\" で返ってくる", function() {
+          expect(helper.ucFirst("webkitTransform")).to.be.a("string");
+          return expect(helper.ucFirst("webkitTransform")).to.equal("WebkitTransform");
+        });
+        it("String だけどアルファベットじゃない君 (\"123\") はありのままの君", function() {
+          expect(helper.ucFirst("123")).to.be.a("string");
+          return expect(helper.ucFirst("123")).to.equal("123");
+        });
+        return it("String じゃないものだったら null を返す", function() {
+          return expect(helper.ucFirst([1, 2, 3])).to.be.a("null");
+        });
+      });
+      describe(".checkBrowser()", function() {
+        return it("テスト書く書く詐欺", function() {});
+      });
+      return describe(".checkSupport()", function() {
+        return it("テスト書く書く詐欺", function() {});
       });
     });
-    describe(".hasProp()", function() {
-      it("先行実装な CSS Property の配列を渡すと存在するかチェケラする。今どき transform ならあるよね", function() {
-        var props;
-
-        props = ["transformProperty", "WebkitTransform", "MozTransform", "OTransform", "msTransform"];
-        expect(helper.hasProp(props)).to.be["instanceof"](Array);
-        return expect(helper.hasProp(props)).to.contain(true);
-      });
-      it("svgMatrixZ とかいうイミフな String を渡したら当然 false が返ってくる", function() {
-        var prop;
-
-        prop = "svgMatrixZ";
-        return expect(helper.hasProp(prop)).to.be["false"];
-      });
-      return it("Array でも String でもないのを渡されても困るので null を返す", function() {
-        return expect(helper.hasProp(void 0)).to.be.a("null");
-      });
-    });
-    describe(".setStyle()", function() {
-      var el, setStyles;
-
-      el = document.createElement("div");
-      setStyles = function(styles) {
-        var prop, style, value, _results;
-
-        style = el.style;
-        _results = [];
-        for (prop in styles) {
-          value = styles[prop];
-          _results.push(helper.setStyle(style, prop, value));
-        }
-        return _results;
-      };
-      beforeEach(function(done) {
-        el.removeAttribute("style");
-        helper.saveProp = {};
-        return done();
-      });
-      it("display: none; を追加したから style=\"diplay: none;\" ってなってるはず", function() {
-        setStyles({
-          display: "block"
-        });
-        return expect(el.getAttribute("style")).to.equal("display: block;");
-      });
-      it("プロパティ複数指定したら、指定した順番に style 属性に入ってるはず", function() {
-        setStyles({
-          display: "none",
-          width: "100px",
-          height: "100px",
-          margin: "0px auto"
-        });
-        return expect(el.getAttribute("style")).to.equal("display: none; width: 100px; height: 100px; margin: 0px auto;");
-      });
-      return it("prefix が必要なやつはプロパティはよしなに prefix つけて、よしなに纏めてくれるはず", function() {
-        setStyles({
-          width: "100px",
-          height: "100px",
-          transform: "translate(0, 0)",
-          transitionTimingFunction: "ease",
-          transitionDuration: "0ms"
-        });
-        return expect(el.getAttribute("style")).to.equal("width: 100px; height: 100px; -webkit-transform: translate(0, 0); transition: 0ms ease; -webkit-transition: 0ms ease;");
-      });
-    });
-    describe(".getCSSVal()", function() {
-      it("仮に webkit だとしたら、transform を入れると \"-webkit-transform\" が返ってくる", function() {
-        expect(helper.getCSSVal("transform")).to.be.a("string");
-        return expect(helper.getCSSVal("transform")).to.equal("-webkit-transform");
-      });
-      it("width とか prefix なしで余裕なプロパティいれるとありのまま木の実ナナで返ってくる", function() {
-        expect(helper.getCSSVal("width")).to.be.a("string");
-        return expect(helper.getCSSVal("width")).to.equal("width");
-      });
-      return it("うっかり配列とか入れたら null 返して激おこプンプン丸", function() {
-        return expect(helper.getCSSVal([1, 2, 3])).to.be.a("null");
-      });
-    });
-    return describe(".ucFirst()", function() {
-      it("\"webkitTransform\" とか渡すと \"WebkitTransform\" で返ってくる", function() {
-        expect(helper.ucFirst("webkitTransform")).to.be.a("string");
-        return expect(helper.ucFirst("webkitTransform")).to.equal("WebkitTransform");
-      });
-      it("String だけどアルファベットじゃない君 (\"123\") はありのままの君", function() {
-        expect(helper.ucFirst("123")).to.be.a("string");
-        return expect(helper.ucFirst("123")).to.equal("123");
-      });
-      return it("String じゃないものだったら null を返す", function() {
-        return expect(helper.ucFirst([1, 2, 3])).to.be.a("null");
-      });
-    });
-  });
+  })(this, this.document);
 });

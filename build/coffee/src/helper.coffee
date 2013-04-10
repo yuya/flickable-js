@@ -1,8 +1,10 @@
 define ->
   do (global = this, document = this.document) ->
+    "use strict"
+
     class Helper
       constructor: ->
-        @div = document.createElement("div")
+        @div      = document.createElement("div")
         @prefixes = ["webkit", "moz", "o", "ms"]
         @saveProp = {}
 
@@ -15,9 +17,13 @@ define ->
       hasProp: (props) ->
         if props instanceof Array
           for prop in props
-            @div.style[prop] isnt undefined
+            if @div.style[prop] isnt undefined then return true
+          return false
         else if typeof props is "string"
-          @div.style[prop] isnt undefined
+          if @div.style[prop] isnt undefined
+            return true
+          else
+            return false
         else
           return null
 
@@ -39,6 +45,7 @@ define ->
               style[_prop] = val
 
               return true
+          return false
 
       getCSSVal: (prop) ->
         if typeof prop isnt "string"
@@ -53,7 +60,6 @@ define ->
 
             if @div.style[_prop] isnt undefined
               ret = "-#{prefix}-#{prop}"
-
           return ret
 
       ucFirst: (str) ->
@@ -61,5 +67,64 @@ define ->
           str.charAt(0).toUpperCase() + str.substr(1)
         else
           return null
+
+      checkBrowser: ->
+        ua      = global.navigator.userAgent.toLowerCase()
+        ios     = ua.match(/(?:iphone\sos|ip[oa]d.*os)\s([\d_]+)/)
+        android = ua.match(/(android)\s+([\d.]+)/)
+
+        browserName = do ->
+          if !!ios
+            return "ios"
+          else if !!android
+            return "android"
+          else
+            return "pc"
+
+        browserVersion = do ->
+          if not ios and not android then return null
+
+          version = (ios or android).pop().split(/\D/).join(".")
+          return parseFloat(version)
+
+        return {
+          browser: browserName
+          version: browserVersion
+        }
+
+      checkSupport: ->
+        hasTransform3d = @hasProp([
+            "perspectiveProperty"
+            "WebkitPerspective"
+            "MozPerspective"
+            "msPerspective"
+            "OPerspective"
+        ])
+        hasTransform = @hasProp([
+            "transformProperty"
+            "WebkitTransform"
+            "MozTransform"
+            "msTransform"
+            "OTransform"
+        ])
+        hasTransition = @hasProp([
+            "transitionProperty"
+            "WebkitTransitionProperty"
+            "MozTransitionProperty"
+            "msTransitionProperty"
+            "OTransitionProperty"
+        ])
+
+        return {
+          touch:        "ontouchstart" of global
+          transform3d:  hasTransform3d
+          transform:    hasTransform
+          transition:   hasTransition
+          cssAnimation: do ->
+            if hasTransform3d or hasTransform and hasTransition
+              true
+            else
+              false
+        }
 
 
