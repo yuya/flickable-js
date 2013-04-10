@@ -46,7 +46,7 @@ define [
         @opts.transition   = @opts.transition   or {}
         @opts.transition   =
           timingFunction: @opts.transition["timingFunction"] or "cubic-bezier(0.23, 1, 0.32, 1)"
-          duration:       do ->
+          duration:       do =>
             @opts.transition["duration"] or if @browser.isLegacy then "200ms" else "330ms"
 
         if @support.cssAnimation

@@ -35,7 +35,7 @@ define(["../src/helper"], function(Helper) {
         this.opts.transition = {
           timingFunction: this.opts.transition["timingFunction"] || "cubic-bezier(0.23, 1, 0.32, 1)",
           duration: (function() {
-            return this.opts.transition["duration"] || (this.browser.isLegacy ? "200ms" : "330ms");
+            return _this.opts.transition["duration"] || (_this.browser.isLegacy ? "200ms" : "330ms");
           })()
         };
         if (this.support.cssAnimation) {
