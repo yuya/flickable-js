@@ -251,31 +251,26 @@
       var _this = this;
 
       this.maxPoint = (function() {
-        var childNodes, itemLength, node, _i, _len;
+        var childNodes, i, itemLength, node, _i, _len;
 
         if (_this.maxPoint === null) {
           childNodes = _this.el.childNodes;
           itemLength = 0;
-          for (_i = 0, _len = childNodes.length; _i < _len; _i++) {
-            node = childNodes[_i];
+          for (i = _i = 0, _len = childNodes.length; _i < _len; i = ++_i) {
+            node = childNodes[i];
             if (node.nodeType === 1) {
               itemLength++;
             }
           }
           if (itemLength > 0) {
-            return itemLength--;
+            itemLength--;
           }
+          return itemLength;
         } else {
           return _this.maxPoint;
         }
       })();
-      this.distance = (function() {
-        if (_this.distance === null) {
-          return _this.el.scrollWidth / (_this.maxPoint + 1);
-        } else {
-          return _this.distance;
-        }
-      })();
+      this.distance = this.distance === null ? this.el.scrollWidth / (this.maxPoint + 1) : this.distance;
       this.maxX = "-" + (this.distance * this.maxPoint);
       return this.moveToPoint();
     };
@@ -328,7 +323,6 @@
       }
       this._setX(-this.currentPoint * this.distance, duration);
       if (beforePoint !== this.currentPoint) {
-        this.helper.triggerEvent(this.el, "flmoveend", true, false);
         return this.helper.triggerEvent(this.el, "flpointmove", true, false);
       }
     };
@@ -338,7 +332,6 @@
         duration = this.opts.transition["duration"];
       }
       this.currentX = x;
-      console.log(typeof this.currentX);
       if (this.support.cssAnimation) {
         return this.helper.setStyle(this.el, {
           transform: this._getTranslate(x)
@@ -389,16 +382,10 @@
         event.stopPropagation();
         distX = pageX - this.basePageX;
         newX = this.currentX + distX;
-        console.log(typeof pageX);
-        console.log(typeof this.basePageX);
-        console.log(typeof distX);
-        console.log(typeof this.currentX);
         if (newX >= 0 || newX < this.maxX) {
           newX = Math.round(this.currentX + distX / 3);
         }
         this.directionX = distX === 0 ? this.directionX : distX > 0 ? -1 : 1;
-        console.log(newX);
-        console.log(this.directionX);
         isPrevent = !this.helper.triggerEvent(this.el, "fltouchmove", true, true, {
           delta: distX,
           direction: this.directionX
@@ -434,13 +421,13 @@
 
       this.el.removeEventListener(this.events.move, this, false);
       document.removeEventListener(this.events.end, this, false);
+      if (!this.scrolling) {
+        return;
+      }
       newPoint = (function() {
         var point;
 
         point = -_this.currentX / _this.distance;
-        console.log(_this.currentX);
-        console.log(_this.distance);
-        console.log(point);
         if (_this.directionX > 0) {
           return Math.ceil(point);
         } else if (_this.directionX < 0) {
@@ -449,7 +436,6 @@
           return Math.round(point);
         }
       })();
-      console.log(newPoint);
       if (newPoint < 0) {
         newPoint = 0;
       } else if (newPoint > this.maxPoint) {

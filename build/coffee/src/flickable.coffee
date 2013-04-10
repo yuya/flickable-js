@@ -32,7 +32,7 @@ do (root = this, factory = (window, documentd) ->
           style[hasSaveProp] = val
         else if style[prop] isnt undefined
           @saveProp[prop] = prop
-          style[prop] = val
+          style[prop]     = val
         else
           for prefix in @prefixes
             _prop = @ucFirst(prefix) + @ucFirst(prop)
@@ -40,7 +40,7 @@ do (root = this, factory = (window, documentd) ->
             # @prefixes とマッチした
             if style[_prop] isnt undefined
               @saveProp[prop] = _prop
-              style[_prop] = val
+              style[_prop]    = val
 
               return true
           return false
@@ -127,7 +127,7 @@ do (root = this, factory = (window, documentd) ->
       ])
 
       return {
-        touch:         "ontouchstart" of window
+        touch:         "ontouchstart"     of window
         eventListener: "addEventListener" of window
         transform3d:   hasTransform3d
         transform:     hasTransform
@@ -214,18 +214,16 @@ do (root = this, factory = (window, documentd) ->
           childNodes = @el.childNodes
           itemLength = 0
 
-          for node in childNodes
+          for node, i in childNodes
             if node.nodeType is 1 then itemLength++
 
           if itemLength > 0 then itemLength--
+
+          return itemLength
         else
           @maxPoint
-      @distance = do =>
-        if @distance is null
-          @el.scrollWidth / (@maxPoint + 1)
-        else
-          @distance
-      @maxX = "-#{@distance * @maxPoint}"
+      @distance = if @distance is null then @el.scrollWidth / (@maxPoint + 1) else @distance
+      @maxX     = "-#{@distance * @maxPoint}"
 
       @moveToPoint()
 
@@ -237,10 +235,12 @@ do (root = this, factory = (window, documentd) ->
 
     toPrev: ->
       if not @hasPrev() then return
+
       @moveToPoint(@currentPoint - 1)
 
     toNext: ->
       if not @hasNext() then return
+
       @moveToPoint(@currentPoint + 1) 
 
     moveToPoint: (point = @currentPoint, duration = @opts.transition["duration"]) ->
@@ -263,13 +263,10 @@ do (root = this, factory = (window, documentd) ->
       @_setX(- @currentPoint * @distance, duration)
 
       if (beforePoint isnt @currentPoint)
-        # TODO: moveend 的なほうは消す雰囲気醸し出す
-        @helper.triggerEvent(@el, "flmoveend", true, false)
         @helper.triggerEvent(@el, "flpointmove", true, false)
 
     _setX: (x, duration = @opts.transition["duration"]) ->
       @currentX = x
-      console.log typeof @currentX
 
       if @support.cssAnimation
         @helper.setStyle(@el,
@@ -297,9 +294,11 @@ do (root = this, factory = (window, documentd) ->
 
       @scrolling  = true
       @moveReady  = false
+
       @startPageX = @helper.getPage(event, "pageX")
       @startPageY = @helper.getPage(event, "pageY")
       @basePageX  = @startPageX
+
       @directionX = 0
       @startTime  = event.timeStamp
 
@@ -316,22 +315,12 @@ do (root = this, factory = (window, documentd) ->
         event.stopPropagation()
 
         distX = pageX - @basePageX
-        newX = @currentX + distX
-
-        console.log typeof pageX
-        console.log typeof @basePageX
-
-        console.log typeof distX
-        console.log typeof @currentX
+        newX  = @currentX + distX
 
         if newX >= 0 or newX < @maxX then newX = Math.round(@currentX + distX / 3)
 
         @directionX = if distX is 0 then @directionX else if distX > 0 then -1 else 1
-
-        console.log newX
-        console.log @directionX
-
-        isPrevent = not @helper.triggerEvent(@el, "fltouchmove", true, true,
+        isPrevent   = not @helper.triggerEvent(@el, "fltouchmove", true, true,
           delta:     distX
           direction: @directionX
         )
@@ -364,17 +353,11 @@ do (root = this, factory = (window, documentd) ->
       @el.removeEventListener(@events.move, @, false)
       document.removeEventListener(@events.end, @, false)
 
-      # if not @scrolling then return
+      if not @scrolling then return
 
       newPoint = do =>
-        point = -(@currentX) / @distance
-        console.log @currentX
-        console.log @distance
-        console.log point
-
-        if @directionX > 0 then Math.ceil(point)  else if @directionX < 0 then Math.floor(point) else Math.round(point)
-
-      console.log newPoint
+        point = -@currentX / @distance
+        if @directionX > 0 then Math.ceil(point) else if @directionX < 0 then Math.floor(point) else Math.round(point)
 
       if newPoint < 0
         newPoint = 0
@@ -408,13 +391,13 @@ do (root = this, factory = (window, documentd) ->
       if @opts.use3d then "translate3d(#{x}px, 0, 0)" else "translate(#{x}px, 0)"
 
     _jsAnimate: (x, duration = @opts.transition["duration"]) ->
-      begin = +new Date()
-      from = parseInt(@el.style.left, 10)
-      to = x
+      begin    = +new Date()
+      from     = parseInt(@el.style.left, 10)
+      to       = x
       duration = parseInt(duration, 10)
-      easing = (time, duration) ->
+      easing   = (time, duration) ->
         "-#{(time /= duration) * (time - 2)}"
-      timer = setInterval ->
+      timer    = setInterval ->
         time = new Date() - begin
 
         if time > duration
@@ -431,7 +414,7 @@ do (root = this, factory = (window, documentd) ->
       @el.removeEventListener(@events.start, @, false)
 
   window["Helper"] = Helper
-  window[NS] = Flickable
+  window[NS]       = Flickable
 
 ) ->
   # AMD
