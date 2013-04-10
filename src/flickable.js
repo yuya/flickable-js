@@ -178,14 +178,14 @@
       };
     };
 
-    Helper.prototype.checkTouchEvents = function() {
+    Helper.prototype.checkEvents = function() {
       var hasTouch;
 
       hasTouch = this.checkSupport.touch;
       return {
-        touchStart: hasTouch ? "touchstart" : "mousedown",
-        touchMove: hasTouch ? "touchmove" : "mousemove",
-        touchEnd: hasTouch ? "touchend" : "mouseup"
+        start: hasTouch ? "touchstart" : "mousedown",
+        move: hasTouch ? "touchmove" : "mousemove",
+        end: hasTouch ? "touchend" : "mouseup"
       };
     };
 
@@ -204,7 +204,7 @@
       this.helper = new Helper();
       this.browser = this.helper.checkBrowser();
       this.support = this.helper.checkSupport();
-      this.events = this.helper.checkTouchEvents();
+      this.events = this.helper.checkEvents();
       if (typeof this.el === "string") {
         this.el = document.querySelector(el);
       } else if (!this.el) {
@@ -247,17 +247,17 @@
           return _this.gestureStart = false;
         });
       }
-      this.el.addEventListener(this.events.touchStart, this, false);
+      this.el.addEventListener(this.events.start, this, false);
       this.refresh();
     }
 
     Flickable.prototype.handleEvent = function(event) {
       switch (event["typeof"]) {
-        case this.events.touchStart:
+        case this.events.start:
           return this._touchStart(event);
-        case this.events.touchMove:
+        case this.events.move:
           return this._touchMove(event);
-        case this.events.touchEnd:
+        case this.events.end:
           return this._touchEnd(event);
         case "click":
           return this._click(event);
@@ -366,8 +366,8 @@
       if (this.opts.disableTouch || this.gestureStart) {
         return;
       }
-      this.el.addEventListener(this.events.touchMove, this, false);
-      document.addEventListener(this.events.touchEnd, this, false);
+      this.el.addEventListener(this.events.move, this, false);
+      document.addEventListener(this.events.end, this, false);
       if (!this.events.touch) {
         event.preventDefault();
       }
@@ -449,8 +449,8 @@
       var newPoint,
         _this = this;
 
-      this.el.removeEventListener(this.events.touchMove, this, false);
-      document.removeEventListener(this.events.touchEnd, this, false);
+      this.el.removeEventListener(this.events.move, this, false);
+      document.removeEventListener(this.events.end, this, false);
       if (!this.scrolling) {
         return;
       }
@@ -533,7 +533,7 @@
     };
 
     Flickable.prototype.destroy = function() {
-      return this.el.removeEventListener(this.events.touchStart, this, false);
+      return this.el.removeEventListener(this.events.start, this, false);
     };
 
     return Flickable;

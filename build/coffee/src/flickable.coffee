@@ -142,13 +142,13 @@ do (root = this, factory = (window, documentd) ->
           else
             false
       }
-    checkTouchEvents: ->
+    checkEvents: ->
       hasTouch = @checkSupport.touch
 
       return {
-        touchStart: if hasTouch then "touchstart" else "mousedown"
-        touchMove:  if hasTouch then "touchmove"  else "mousemove"
-        touchEnd:   if hasTouch then "touchend"   else "mouseup"
+        start: if hasTouch then "touchstart" else "mousedown"
+        move:  if hasTouch then "touchmove"  else "mousemove"
+        end:   if hasTouch then "touchend"   else "mouseup"
       }
 
   class Flickable
@@ -158,7 +158,7 @@ do (root = this, factory = (window, documentd) ->
       @helper  = new Helper()
       @browser = @helper.checkBrowser()
       @support = @helper.checkSupport()
-      @events  = @helper.checkTouchEvents()
+      @events  = @helper.checkEvents()
 
       if typeof @el is "string"
         @el = document.querySelector(el)
@@ -202,16 +202,16 @@ do (root = this, factory = (window, documentd) ->
         document.addEventListener "gesturestart", => @gestureStart = true
         document.addEventListener "gestureend",   => @gestureStart = false
 
-      @el.addEventListener(@events.touchStart, @, false)
+      @el.addEventListener(@events.start, @, false)
       @refresh()
 
     handleEvent: (event) ->
       switch event.typeof
-        when @events.touchStart
+        when @events.start
           @_touchStart(event)
-        when @events.touchMove
+        when @events.move
           @_touchMove(event)
-        when @events.touchEnd
+        when @events.end
           @_touchEnd(event)
         when "click"
           @_click(event)
@@ -287,8 +287,8 @@ do (root = this, factory = (window, documentd) ->
     _touchStart: (event) ->
       if @opts.disableTouch or @gestureStart then return
 
-      @el.addEventListener(@events.touchMove,     @, false)
-      document.addEventListener(@events.touchEnd, @, false)
+      @el.addEventListener(@events.move,     @, false)
+      document.addEventListener(@events.end, @, false)
 
       if not @events.touch then event.preventDefault()
 
@@ -360,8 +360,8 @@ do (root = this, factory = (window, documentd) ->
       @basePageX = pageX
 
     _touchEnd: (event) ->
-      @el.removeEventListener(@events.touchMove, @, false)
-      document.removeEventListener(@events.touchEnd, @, false)
+      @el.removeEventListener(@events.move, @, false)
+      document.removeEventListener(@events.end, @, false)
 
       if not @scrolling then return
 
@@ -427,7 +427,7 @@ do (root = this, factory = (window, documentd) ->
       , 10
 
     destroy: ->
-      @el.removeEventListener(@events.touchStart, @, false)
+      @el.removeEventListener(@events.start, @, false)
 
   window[NS] = Flickable
 
