@@ -133,6 +133,85 @@ do (root = this, factory = (window, documentd) ->
         move:  if hasTouch then "touchmove"  else "mousemove"
         end:   if hasTouch then "touchend"   else "mouseup"
       }
+ 
+    # インライン属性で定義された幅の取得がザルでござる〜
+    # てか 要素の幅の取得、全パターン網羅するのってエグエグなんだなぁ〜
+    # あー jQuery つかいたい jQuery 最高! 天才! ジーニアス! 頭いい
+    getWidth: (element) ->
+      if element is undefined then throw new Error("Element Not Found")
+
+      css          = window.getComputedStyle(element)
+      boxSizingVal = undefined 
+      hasBoxSizing = do ->
+        properties = [
+          "-webkit-box-sizing"
+          "-moz-box-sizing"
+          "-o-box-sizing"
+          "-ms-box-sizing"
+          "box-sizing"
+        ]
+
+        for prop in properties
+          if element.style[prop] isnt undefined
+            boxSizingVal = element.style[prop]
+            return true
+        return false
+
+      # if not css["width"]
+      #   width = parseFloat(element.style.width.match(/\d+/), 10)
+      # else if not hasBoxSizing or boxSizingVal is "content-box"
+      if not hasBoxSizing or boxSizingVal is "content-box"
+        styleParser = (props) ->
+          value = []
+          total = 0
+
+          for prop, i in props
+            if css[prop]
+              value[i] = parseFloat(css[props[0]].match(/\d+/), 10)
+              total += value[i]
+
+          return total
+
+        border  = styleParser(["border-right-width", "border-left-width"])
+        padding = styleParser(["padding-right",      "padding-left"])
+        width   = element.scrollWidth + border + padding;
+      # else if hasBoxSizing and boxSizingVal is "border-box" or not hasBoxSizing
+      else if element.scrollWidth is 0
+        width = parseFloat(element.style.width.match(/\d+/), 10)
+
+        if not element.style.boxSizing or not element.style.webkitBoxSizing
+          if element.style.paddingRight then width += parseFloat(element.style.paddingRight.match(/\d+/), 10)
+          if element.style.paddingLeft  then width += parseFloat(element.style.paddingLeft.match(/\d+/), 10)
+
+        return width
+      else
+        width = element.scrollWidth
+
+    getTranslate: (use3d = true, x, y = 0, z = 0) ->
+      if @opts.use3d then "translate3d(#{x}px, 0, 0)" else "translate(#{x}px, 0)"
+
+    # ブラウザのバージョンによって正しいのが取得できなかったりしそうな不安感たっぷりのメソッドである
+    # なのでもうちょっといい方法あればそれにしたい
+    getTransitionEndEventName: ->
+      ua       = window.navigator.userAgent.toLowerCase()
+      match    = /(webkit)[ \/]([\w.]+)/.exec(ua)  or
+                 /(firefox)[ \/]([\w.]+)/.exec(ua) or
+                 /(msie) ([\w.]+)/.exec(ua)        or
+                 /(opera)(?:.*version|)[ \/]([\w.]+)/.exec(ua) or []
+      browser  = match[1]
+      version  = parseFloat(match[2], 10)
+
+      if browser is "msie" and version >= 10 then browser = "modernIE"
+
+      switch browser 
+        when "webkit"
+          transitionEndName = "webkitTransitionEnd"
+        when "opera"
+          transitionEndName = "oTransitionEnd"
+        when "firefox", "modernIE"
+          transitionEndName = "transitionend"
+        else
+          transitionEndName = undefined
 
   class Flickable
     constructor: (element, opts = {}) ->
@@ -152,15 +231,19 @@ do (root = this, factory = (window, documentd) ->
       @distance     = null
       @maxPoint     = null
       @gestureStart = false
+      @didCloneNode = false
 
       @currentPoint = @currentX  = @maxX       = 0
       @scrolling    = @moveReady = @startPageX = @startPageY = @basePageX = @startTime = null
 
       @opts.use3d        = if @opts.disable3d then false else @support.transform3d
       @opts.useJsAnimate = false
-
       @opts.disableTouch = @opts.disableTouch or false
       @opts.disable3d    = @opts.disable3d    or false
+
+      @opts.autoPlay     = @opts.autoPlay     or false
+      @opts.interval     = @opts.interval     or 6600
+      @opts.loop         = @opts.loop         or if @opts.autoPlay then true else false
 
       @opts.transition   = @opts.transition   or {}
       @opts.transition   =
@@ -187,8 +270,12 @@ do (root = this, factory = (window, documentd) ->
           @gestureStart = false
         , false
 
-      @refresh()
       @el.addEventListener(@events.start, @, false)
+
+      if @opts.autoPlay then @_autoPlay()
+      if @opts.loop     then @_cloneNode()
+
+      @refresh()
 
     handleEvent: (event) ->
       switch event.type
@@ -376,6 +463,67 @@ do (root = this, factory = (window, documentd) ->
 
     _getTranslate: (x) ->
       if @opts.use3d then "translate3d(#{x}px, 0, 0)" else "translate(#{x}px, 0)"
+
+    _cloneNode: ->
+      childNodes = @el.childNodes
+      itemAry    = []
+
+      if not @loop or @didCloneNode then return
+
+      for node in childNodes
+        if node.nodeType is 1 then itemAry.push(node)
+
+      firstItem = itemAry.shift()
+      lastItem  = itemAry.pop()
+
+      @el.insertBefore(lastItem.cloneNode(true), firstItem)
+      @el.appendChild(firstItem.cloneNode(true))
+
+      @didCloneNode = true
+
+    _autoPlay: ->
+      if not @autoPlay then return
+
+      @timerId = window.setInterval =>
+        @toNext()
+      , @opts.interval
+
+    _clearAutoPlay: ->
+      window.clearInterval(@timerId)
+
+    _setTotalWidth: ->
+      childNodes = @el.childNodes
+      itemAry    = []
+
+      for node in childNodes
+        if node.nodeType is 1 then itemAry.push(node)
+
+      itemWidth  = @helper.getWidth(itemAry[0])
+      totalWidth = itemWidth * itemAry.length 
+
+      @el.style.width = "#{totalWidth}px"
+
+    # 毎回コストかかってる感じなのでチューニングしたい
+    _loop: ->
+      lastPoint = @maxPoint - 1
+      clearTime = @opts.interval / 2
+      smartLoop = =>
+        if @currentPoint is @maxPoint
+          @moveToPoint(1, 0)
+        else if (@currentPoint is 0)
+          @moveToPoint(lastPoint, 0)
+      transitionEndEventName = @helper.getTransitionEndEventName()
+
+      if transitionEndEventName isnt undefined
+        @el.addEventListener(transitionEndEventName, smartLoop, false)
+        window.setTimeout =>
+          @el.removeEventListener(transitionEndEventName, smartLoop, false)
+        , clearTime
+      else
+        timerId = smartLoop
+        window.clearTimeout ->
+          smartLoop()
+        , clearTime
 
     _jsAnimate: (x, duration = @opts.transition["duration"]) ->
       begin    = +new Date()

@@ -7,9 +7,19 @@
   expect = chai.expect;
 
   describe("Helper Class", function() {
-    var helper;
+    var helper, spoofUserAgent;
 
     helper = new Helper();
+    spoofUserAgent = function(ua) {
+      var _navigator;
+
+      _navigator = window.navigator;
+      window.navigator = new Object();
+      window.navigator.__proto__ = _navigator;
+      return window.navigator.__defineGetter__("userAgent", function() {
+        return ua;
+      });
+    };
     describe(".getPage()", function() {
       var el, moveEvent;
 
@@ -90,17 +100,22 @@
       });
     });
     describe(".getCSSVal()", function() {
+      var fn;
+
+      fn = function(arg) {
+        return helper.getCSSVal(arg);
+      };
       it("仮に webkit だとしたら、transform を入れると \"-webkit-transform\" が返ってくる", function() {
-        expect(helper.getCSSVal("transform")).to.be.a("string");
-        return expect(helper.getCSSVal("transform")).to.equal("-webkit-transform");
+        expect(fn("transform")).to.be.a("string");
+        return expect(fn("transform")).to.equal("-webkit-transform");
       });
       it("width とか prefix なしで余裕なプロパティいれるとありのまま木の実ナナで返ってくる", function() {
-        expect(helper.getCSSVal("width")).to.be.a("string");
-        return expect(helper.getCSSVal("width")).to.equal("width");
+        expect(fn("width")).to.be.a("string");
+        return expect(fn("width")).to.equal("width");
       });
       return it("うっかり配列とか入れたら TypeError 投げつけて激おこプンプン丸", function() {
         return (expect(function() {
-          return helper.getCSSVal([1, 2, 3]);
+          return fn([1, 2, 3]);
         })).to["throw"](TypeError);
       });
     });
@@ -182,17 +197,10 @@
       });
     });
     describe(".checkBrowser()", function() {
-      var spoofUserAgent;
+      var fn;
 
-      spoofUserAgent = function(ua) {
-        var _navigator;
-
-        _navigator = window.navigator;
-        window.navigator = new Object();
-        window.navigator.__proto__ = _navigator;
-        return window.navigator.__defineGetter__("userAgent", function() {
-          return ua;
-        });
+      fn = function(arg) {
+        return helper.checkBrowser[arg];
       };
       describe("iOS 6.1.3 で試してみました", function() {
         spoofUserAgent("Mozilla/5.0 (iPhone; CPU iPhone OS 6_1_3 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) Mobile/10B329");
@@ -242,56 +250,130 @@
       });
     });
     describe(".checkSupport()", function() {
-      var hasTouch;
+      var fn, hasTouch;
 
-      hasTouch = helper.checkSupport().touch;
+      fn = helper.checkSupport();
+      hasTouch = fn.touch;
       return describe("WebKit 前提でございやんす", function() {
         if (hasTouch) {
           it("タッチイベントもってるから touch: true が返ってくる", function() {
-            return expect(helper.checkSupport().touch).to.be["true"];
+            return expect(fn.touch).to.be["true"];
           });
         } else {
           it("タッチイベントもってないから touch: false が返ってくる", function() {
-            return expect(helper.checkSupport().touch).to.be["false"];
+            return expect(fn.touch).to.be["false"];
           });
         }
         it("天下の WebKit さんなら Transform3d くらい対応してるはず", function() {
-          return expect(helper.checkSupport().transform3d).to.be["true"];
+          return expect(fn.transform3d).to.be["true"];
         });
         return it("Transform3d に対応してる、すなわち cssAnimation: true が返ってくる", function() {
-          return expect(helper.checkSupport().cssAnimation).to.be["true"];
+          return expect(fn.cssAnimation).to.be["true"];
         });
       });
     });
-    return describe(".checkTouchEvents()", function() {
-      var hasTouch;
+    describe(".checkTouchEvents()", function() {
+      var fn, hasTouch;
 
+      fn = helper.checkTouchEvents();
       hasTouch = helper.checkSupport().touch;
       if (hasTouch) {
         return describe("タッチイベント持っていますね", function() {
           it("なもんで start: \"touchstart\" が返ってくる", function() {
-            return expect(helper.checkTouchEvents().start).to.equal("touchstart");
+            return expect(fn.start).to.equal("touchstart");
           });
           it("なもんで move: \"touchmove\" が返ってくる", function() {
             return expect(helper.checkTouchEvents().move).to.equal("touchmove");
           });
           return it("なもんで end: \"touchend\" が返ってくる", function() {
-            return expect(helper.checkTouchEvents().end).to.equal("touchend");
+            return expect(fn.end).to.equal("touchend");
           });
         });
       } else {
         return describe("タッチイベント持ってませんね", function() {
           it("なもんで start: \"mousedown\" が返ってくる", function() {
-            return expect(helper.checkTouchEvents().start).to.equal("mousedown");
+            return expect(fn.start).to.equal("mousedown");
           });
           it("なもんで move: \"mousemove\" が返ってくる", function() {
-            return expect(helper.checkTouchEvents().move).to.equal("mousemove");
+            return expect(fn.move).to.equal("mousemove");
           });
           return it("なもんで end: \"mouseup\" が返ってくる", function() {
-            return expect(helper.checkTouchEvents().end).to.equal("mouseup");
+            return expect(fn.end).to.equal("mouseup");
           });
         });
       }
+    });
+    describe(".getWidth()", function() {
+      var el, fn;
+
+      el = document.createElement("div");
+      fn = function(arg) {
+        return helper.getWidth(arg);
+      };
+      beforeEach(function(done) {
+        el.style = "";
+        return done();
+      });
+      describe("width: 100px; な要素の幅を取得すると", function() {
+        before(function() {
+          return el.style.width = "100px";
+        });
+        return it("Number で 100 が返ってくる", function() {
+          expect(fn(el)).to.be.a("number");
+          return expect(fn(el)).to.equal(100);
+        });
+      });
+      describe("width: 80px; padding-right: 10px; な要素だと", function() {
+        before(function() {
+          el.style.width = "80px";
+          return el.style.paddingRight = "10px";
+        });
+        return it("幅 80 と padding の 10 足して 90 が返ってくる。", function() {
+          expect(fn(el)).to.be.a("number");
+          return expect(fn(el)).to.equal(90);
+        });
+      });
+      return describe("width: 80px; padding-right: 10px; -webkit-box-sizing: border-box; box-sizing: border-box; な要素を取得すると", function() {
+        before(function() {
+          el.style.width = "80px";
+          el.style.paddingRight = "10px";
+          el.style.webkitBoxSizing = "border-box";
+          return el.style.boxSizing = "border-box";
+        });
+        return it("90 なのかなーと思いきや box-sizing: border-box; の効能で 80 が返ってくる。", function() {
+          expect(fn(el)).to.be.a("number");
+          return expect(fn(el)).to.equal(80);
+        });
+      });
+    });
+    return describe(".getTransitionEndEventName()", function() {
+      describe("デスクトップ版 の Google Chrome", function() {
+        before(function() {
+          return spoofUserAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_3) AppleWebKit/537.31 (KHTML, like Gecko) Chrome/26.0.1410.65 Safari/537.31");
+        });
+        return it("\"webkitTransitionEnd\" が返ってくる", function() {
+          expect(helper.getTransitionEndEventName()).to.be.a("string");
+          return expect(helper.getTransitionEndEventName()).to.equal("webkitTransitionEnd");
+        });
+      });
+      describe("デスクトップ版 の Firefox", function() {
+        before(function() {
+          return spoofUserAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10.8; rv:19.0) Gecko/20100101 Firefox/19.0");
+        });
+        return it("\"transitionend\" が返ってくる", function() {
+          expect(helper.getTransitionEndEventName()).to.be.a("string");
+          return expect(helper.getTransitionEndEventName()).to.equal("transitionend");
+        });
+      });
+      return describe("デスクトップ版 の Opera", function() {
+        before(function() {
+          return spoofUserAgent("Opera/9.80 (Macintosh; Intel Mac OS X 10.8.3; U; en) Presto/2.10.289 Version/12.02 (Core 2.10.289)");
+        });
+        return it("\"webkitTransitionEnd\" が返ってくる", function() {
+          expect(helper.getTransitionEndEventName()).to.be.a("string");
+          return expect(helper.getTransitionEndEventName()).to.equal("oTransitionEnd");
+        });
+      });
     });
   });
 

@@ -176,6 +176,101 @@
         };
       };
 
+      Helper.prototype.getWidth = function(element) {
+        var border, boxSizingVal, css, hasBoxSizing, padding, styleParser, width;
+
+        if (element === void 0) {
+          throw new Error("Element Not Found");
+        }
+        css = window.getComputedStyle(element);
+        boxSizingVal = void 0;
+        hasBoxSizing = (function() {
+          var prop, properties, _i, _len;
+
+          properties = ["-webkit-box-sizing", "-moz-box-sizing", "-o-box-sizing", "-ms-box-sizing", "box-sizing"];
+          for (_i = 0, _len = properties.length; _i < _len; _i++) {
+            prop = properties[_i];
+            if (element.style[prop] !== void 0) {
+              boxSizingVal = element.style[prop];
+              return true;
+            }
+          }
+          return false;
+        })();
+        if (!hasBoxSizing || boxSizingVal === "content-box") {
+          styleParser = function(props) {
+            var i, prop, total, value, _i, _len;
+
+            value = [];
+            total = 0;
+            for (i = _i = 0, _len = props.length; _i < _len; i = ++_i) {
+              prop = props[i];
+              if (css[prop]) {
+                value[i] = parseFloat(css[props[0]].match(/\d+/), 10);
+                total += value[i];
+              }
+            }
+            return total;
+          };
+          border = styleParser(["border-right-width", "border-left-width"]);
+          padding = styleParser(["padding-right", "padding-left"]);
+          return width = element.scrollWidth + border + padding;
+        } else if (element.scrollWidth === 0) {
+          width = parseFloat(element.style.width.match(/\d+/), 10);
+          if (!element.style.boxSizing || !element.style.webkitBoxSizing) {
+            if (element.style.paddingRight) {
+              width += parseFloat(element.style.paddingRight.match(/\d+/), 10);
+            }
+            if (element.style.paddingLeft) {
+              width += parseFloat(element.style.paddingLeft.match(/\d+/), 10);
+            }
+          }
+          return width;
+        } else {
+          return width = element.scrollWidth;
+        }
+      };
+
+      Helper.prototype.getTranslate = function(use3d, x, y, z) {
+        if (use3d == null) {
+          use3d = true;
+        }
+        if (y == null) {
+          y = 0;
+        }
+        if (z == null) {
+          z = 0;
+        }
+        if (this.opts.use3d) {
+          return "translate3d(" + x + "px, 0, 0)";
+        } else {
+          return "translate(" + x + "px, 0)";
+        }
+      };
+
+      Helper.prototype.getTransitionEndEventName = function() {
+        var browser, match, transitionEndName, ua, version;
+
+        ua = window.navigator.userAgent.toLowerCase();
+        match = /(webkit)[ \/]([\w.]+)/.exec(ua) || /(firefox)[ \/]([\w.]+)/.exec(ua) || /(msie) ([\w.]+)/.exec(ua) || /(opera)(?:.*version|)[ \/]([\w.]+)/.exec(ua) || [];
+        browser = match[1];
+        version = parseFloat(match[2], 10);
+        if (browser === "msie" && version >= 10) {
+          browser = "modernIE";
+        }
+        switch (browser) {
+          case "webkit":
+            return transitionEndName = "webkitTransitionEnd";
+          case "opera":
+            return transitionEndName = "oTransitionEnd";
+          case "firefox":
+          case "modernIE":
+            return transitionEndName = "transitionend";
+          default:
+            return transitionEndName = void 0;
+        }
+      };
+
       return Helper;
 
     })();
@@ -200,12 +295,16 @@
         this.distance = null;
         this.maxPoint = null;
         this.gestureStart = false;
+        this.didCloneNode = false;
         this.currentPoint = this.currentX = this.maxX = 0;
         this.scrolling = this.moveReady = this.startPageX = this.startPageY = this.basePageX = this.startTime = null;
         this.opts.use3d = this.opts.disable3d ? false : this.support.transform3d;
         this.opts.useJsAnimate = false;
         this.opts.disableTouch = this.opts.disableTouch || false;
         this.opts.disable3d = this.opts.disable3d || false;
+        this.opts.autoPlay = this.opts.autoPlay || false;
+        this.opts.interval = this.opts.interval || 6600;
+        this.opts.loop = this.opts.loop || (this.opts.autoPlay ? true : false);
         this.opts.transition = this.opts.transition || {};
         this.opts.transition = {
           timingFunction: this.opts.transition["timingFunction"] || "cubic-bezier(0.23, 1, 0.32, 1)",
@@ -234,8 +333,14 @@
             return _this.gestureStart = false;
           }, false);
         }
-        this.refresh();
         this.el.addEventListener(this.events.start, this, false);
+        if (this.opts.autoPlay) {
+          this._autoPlay();
+        }
+        if (this.opts.loop) {
+          this._cloneNode();
+        }
+        this.refresh();
       }
 
       Flickable.prototype.handleEvent = function(event) {
@@ -473,6 +578,85 @@
           return "translate3d(" + x + "px, 0, 0)";
         } else {
           return "translate(" + x + "px, 0)";
+        }
+      };
+
+      Flickable.prototype._cloneNode = function() {
+        var childNodes, firstItem, itemAry, lastItem, node, _i, _len;
+
+        childNodes = this.el.childNodes;
+        itemAry = [];
+        if (!this.loop || this.didCloneNode) {
+          return;
+        }
+        for (_i = 0, _len = childNodes.length; _i < _len; _i++) {
+          node = childNodes[_i];
+          if (node.nodeType === 1) {
+            itemAry.push(node);
+          }
+        }
+        firstItem = itemAry.shift();
+        lastItem = itemAry.pop();
+        this.el.insertBefore(lastItem.cloneNode(true), firstItem);
+        this.el.appendChild(firstItem.cloneNode(true));
+        return this.didCloneNode = true;
+      };
+
+      Flickable.prototype._autoPlay = function() {
+        var _this = this;
+
+        if (!this.autoPlay) {
+          return;
+        }
+        return this.timerId = window.setInterval(function() {
+          return _this.toNext();
+        }, this.opts.interval);
+      };
+
+      Flickable.prototype._clearAutoPlay = function() {
+        return window.clearInterval(this.timerId);
+      };
+
+      Flickable.prototype._setTotalWidth = function() {
+        var childNodes, itemAry, itemWidth, node, totalWidth, _i, _len;
+
+        childNodes = this.el.childNodes;
+        itemAry = [];
+        for (_i = 0, _len = childNodes.length; _i < _len; _i++) {
+          node = childNodes[_i];
+          if (node.nodeType === 1) {
+            itemAry.push(node);
+          }
+        }
+        itemWidth = this.helper.getWidth(itemAry[0]);
+        totalWidth = itemWidth * itemAry.length;
+        return this.el.style.width = "" + totalWidth + "px";
+      };
+
+      Flickable.prototype._loop = function() {
+        var clearTime, lastPoint, smartLoop, timerId, transitionEndEventName,
+          _this = this;
+
+        lastPoint = this.maxPoint - 1;
+        clearTime = this.opts.interval / 2;
+        smartLoop = function() {
+          if (_this.currentPoint === _this.maxPoint) {
+            return _this.moveToPoint(1, 0);
+          } else if (_this.currentPoint === 0) {
+            return _this.moveToPoint(lastPoint, 0);
+          }
+        };
+        transitionEndEventName = this.helper.getTransitionEndEventName();
+        if (transitionEndEventName !== void 0) {
+          this.el.addEventListener(transitionEndEventName, smartLoop, false);
+          return window.setTimeout(function() {
+            return _this.el.removeEventListener(transitionEndEventName, smartLoop, false);
+          }, clearTime);
+        } else {
+          timerId = smartLoop;
+          return window.clearTimeout(function() {
+            return smartLoop();
+          }, clearTime);
         }
       };
 
