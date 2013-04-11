@@ -8,10 +8,7 @@ do (root = this, factory = (window, documentd) ->
       @saveProp = {}
 
     getPage: (event, page) ->
-      if event.changedTouches
-        event.changedTouches[0][page]
-      else
-        event[page]
+      if event.changedTouches then event.changedTouches[0][page] else event[page]
 
     hasProp: (props) ->
       if props instanceof Array
@@ -21,13 +18,13 @@ do (root = this, factory = (window, documentd) ->
       else if typeof props is "string"
         if @div.style[prop] isnt undefined then true else false
       else
-        return null
+        throw new TypeError("Must be a Array or String")
 
     setStyle: (element, styles) ->
       style       = element.style
       hasSaveProp = @saveProp[prop]
 
-      set = (style, prop, val) =>
+      _setAttr = (style, prop, val) =>
         if hasSaveProp
           style[hasSaveProp] = val
         else if style[prop] isnt undefined
@@ -46,13 +43,13 @@ do (root = this, factory = (window, documentd) ->
           return false
 
       for prop of styles
-        set(style, prop, styles[prop])
+        _setAttr(style, prop, styles[prop])
 
     getCSSVal: (prop) ->
-      if typeof prop isnt "string"
-        return null
+      if typeof prop isnt "string" then throw new TypeError("Must be a String")
+
       # transform とかデフォで対応してるんだったらそれを使う
-      else if @div.style[prop] isnt undefined
+      if @div.style[prop] isnt undefined
         return prop
       # prefix つきじゃないとダメなら優しく prefix をつけてあげる
       else
@@ -64,12 +61,12 @@ do (root = this, factory = (window, documentd) ->
         return ret
 
     ucFirst: (str) ->
-      if typeof str is "string"
-        str.charAt(0).toUpperCase() + str.substr(1)
-      else
-        return null
+      if typeof str isnt "string" then throw new TypeError("Must be a String")
+      str.charAt(0).toUpperCase() + str.substr(1)
 
     triggerEvent: (element, type, bubbles, cancelable, data) ->
+      if typeof element isnt "object" then throw new Error("Must be a Element")
+
       event = document.createEvent("Event")
       event.initEvent(type, bubbles, cancelable)
 
@@ -84,18 +81,11 @@ do (root = this, factory = (window, documentd) ->
       ios     = ua.match(/(?:iphone\sos|ip[oa]d.*os)\s([\d_]+)/)
       android = ua.match(/(android)\s+([\d.]+)/)
 
-      # browserName = do ->
-      #   if !!ios
-      #     return "ios"
-      #   else if !!android
-      #     return "android"
-      #   else
-      #     return "pc"
       browserName    = if !!ios then "ios" else if !!android then "android" else "pc"
       browserVersion = do ->
         if not ios and not android then return null
 
-        parseFloat((ios or android).pop().split(/\D/).join("."))
+        parseFloat((ios or android).pop().split(/\D/).join("."), 10)
 
       return {
         name:     browserName
@@ -104,27 +94,27 @@ do (root = this, factory = (window, documentd) ->
       }
 
     checkSupport: ->
-      hasTransform3d = @hasProp([
-          "perspectiveProperty"
-          "WebkitPerspective"
-          "MozPerspective"
-          "msPerspective"
-          "OPerspective"
-      ])
-      hasTransform = @hasProp([
-          "transformProperty"
-          "WebkitTransform"
-          "MozTransform"
-          "msTransform"
-          "OTransform"
-      ])
-      hasTransition = @hasProp([
-          "transitionProperty"
-          "WebkitTransitionProperty"
-          "MozTransitionProperty"
-          "msTransitionProperty"
-          "OTransitionProperty"
-      ])
+      hasTransform3d = @hasProp [
+        "perspectiveProperty"
+        "WebkitPerspective"
+        "MozPerspective"
+        "msPerspective"
+        "OPerspective"
+      ]
+      hasTransform = @hasProp [
+        "transformProperty"
+        "WebkitTransform"
+        "MozTransform"
+        "msTransform"
+        "OTransform"
+      ]
+      hasTransition = @hasProp [
+        "transitionProperty"
+        "WebkitTransitionProperty"
+        "MozTransitionProperty"
+        "msTransitionProperty"
+        "OTransitionProperty"
+      ]
 
       return {
         touch:         "ontouchstart"     of window
@@ -134,7 +124,8 @@ do (root = this, factory = (window, documentd) ->
         transition:    hasTransition
         cssAnimation: if hasTransform3d or hasTransform and hasTransition then true else false
       }
-    checkEvents: ->
+
+    checkTouchEvents: ->
       hasTouch = @checkSupport.touch
 
       return {
@@ -150,7 +141,7 @@ do (root = this, factory = (window, documentd) ->
       @helper  = new Helper()
       @browser = @helper.checkBrowser()
       @support = @helper.checkSupport()
-      @events  = @helper.checkEvents()
+      @events  = @helper.checkTouchEvents()
 
       if typeof @el is "string"
         @el = document.querySelector(@el)
@@ -178,21 +169,23 @@ do (root = this, factory = (window, documentd) ->
           @opts.transition["duration"] or if @browser.isLegacy then "200ms" else "330ms"
 
       if @support.cssAnimation
-        @helper.setStyle(@el,
+        @helper.setStyle @el,
           transitionProperty:       @helper.getCSSVal("transform")
           transitionDuration:       "0ms"
           transitionTimingFunction: @opts.transition["timingFunction"]
           transform:                @_getTranslate(0)
-        )
       else
-        @helper.setStyle(@el,
+        @helper.setStyle @el,
           position: "relative"
           left:     "0px"
-        )
 
       if @support.eventListener
-        document.addEventListener "gesturestart", => @gestureStart = true
-        document.addEventListener "gestureend",   => @gestureStart = false
+        document.addEventListener "gesturestart", =>
+          @gestureStart = true
+        , false
+        document.addEventListener "gestureend",   =>
+          @gestureStart = false
+        , false
 
       @refresh()
       @el.addEventListener(@events.start, @, false)
@@ -253,9 +246,8 @@ do (root = this, factory = (window, documentd) ->
         @currentPoint = parseInt(point, 10)
 
       if @support.cssAnimation
-        @helper.setStyle(@el,
+        @helper.setStyle @el,
           transitionDuration: duration
-        )
       else
         @opts.useJsAnimate = true
 
@@ -268,9 +260,8 @@ do (root = this, factory = (window, documentd) ->
       @currentX = x
 
       if @support.cssAnimation
-        @helper.setStyle(@el,
+        @helper.setStyle @el,
           transform: @_getTranslate(x)
-        )
       else if @opts.useJsAnimate
         @_jsAnimate(x, duration)
       else
@@ -285,9 +276,8 @@ do (root = this, factory = (window, documentd) ->
       if not @events.touch then event.preventDefault()
 
       if @support.cssAnimation
-        @helper.setStyle(@el,
+        @helper.setStyle @el,
           transitionDuration: "0ms"
-        )
       else
         @opts.useJsAnimate = false
 
@@ -319,18 +309,16 @@ do (root = this, factory = (window, documentd) ->
         if newX >= 0 or newX < @maxX then newX = Math.round(@currentX + distX / 3)
 
         @directionX = if distX is 0 then @directionX else if distX > 0 then -1 else 1
-        isPrevent   = not @helper.triggerEvent(@el, "fltouchmove", true, true,
+        isPrevent   = not @helper.triggerEvent @el, "fltouchmove", true, true,
           delta:     distX
           direction: @directionX
-        )
 
         if isPrevent
-          @_touchAfter(
+          @_touchAfter 
             moved:         false
             originalPoint: @currentPoint
             newPoint:      @currentPoint
             cancelled:     true
-          )
         else
           @_setX(newX)
 
