@@ -151,10 +151,10 @@ do (root = this, factory = (window, documentd) ->
       # Set Options
       @distance     = null
       @maxPoint     = null
+      @gestureStart = false
 
       @currentPoint = @currentX  = @maxX       = 0
       @scrolling    = @moveReady = @startPageX = @startPageY = @basePageX = @startTime = null
-      @gestureStart = false
 
       @opts.use3d        = if @opts.disable3d then false else @support.transform3d
       @opts.useJsAnimate = false
@@ -405,7 +405,7 @@ do (root = this, factory = (window, documentd) ->
 
 ) ->
   # AMD
-  if typeof define is "function" and define.amd
+  if typeof define is "function" and define.amd is "object"
     define(NS, [], ->
       factory(root, root.document)
       root[NS]
