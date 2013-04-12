@@ -270,7 +270,7 @@ describe "Helper Class", ->
         expect(fn(el)).to.equal(80)
 
   describe ".getTransitionEndEventName()", ->
-    describe "デスクトップ版 の Google Chrome", ->
+    describe "Google Chrome だと", ->
       before ->
         spoofUserAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_3) AppleWebKit/537.31 (KHTML, like Gecko) Chrome/26.0.1410.65 Safari/537.31")
 
@@ -278,7 +278,7 @@ describe "Helper Class", ->
         expect(helper.getTransitionEndEventName()).to.be.a("string")
         expect(helper.getTransitionEndEventName()).to.equal("webkitTransitionEnd")
 
-    describe "デスクトップ版 の Firefox", ->
+    describe "Firefox だと", ->
       before ->
         spoofUserAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10.8; rv:19.0) Gecko/20100101 Firefox/19.0")
 
@@ -286,10 +286,10 @@ describe "Helper Class", ->
         expect(helper.getTransitionEndEventName()).to.be.a("string")
         expect(helper.getTransitionEndEventName()).to.equal("transitionend")
 
-    describe "デスクトップ版 の Opera", ->
+    describe "Opera だと", ->
       before ->
         spoofUserAgent("Opera/9.80 (Macintosh; Intel Mac OS X 10.8.3; U; en) Presto/2.10.289 Version/12.02 (Core 2.10.289)")
 
-      it "\"webkitTransitionEnd\" が返ってくる", ->
+      it "\"oTransitionEnd\" が返ってくる", ->
         expect(helper.getTransitionEndEventName()).to.be.a("string")
         expect(helper.getTransitionEndEventName()).to.equal("oTransitionEnd")

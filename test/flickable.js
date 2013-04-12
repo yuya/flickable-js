@@ -347,7 +347,7 @@
       });
     });
     return describe(".getTransitionEndEventName()", function() {
-      describe("デスクトップ版 の Google Chrome", function() {
+      describe("Google Chrome だと", function() {
         before(function() {
           return spoofUserAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_3) AppleWebKit/537.31 (KHTML, like Gecko) Chrome/26.0.1410.65 Safari/537.31");
         });
@@ -356,7 +356,7 @@
           return expect(helper.getTransitionEndEventName()).to.equal("webkitTransitionEnd");
         });
       });
-      describe("デスクトップ版 の Firefox", function() {
+      describe("Firefox だと", function() {
         before(function() {
           return spoofUserAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10.8; rv:19.0) Gecko/20100101 Firefox/19.0");
         });
@@ -365,11 +365,11 @@
           return expect(helper.getTransitionEndEventName()).to.equal("transitionend");
         });
       });
-      return describe("デスクトップ版 の Opera", function() {
+      return describe("Opera だと", function() {
         before(function() {
           return spoofUserAgent("Opera/9.80 (Macintosh; Intel Mac OS X 10.8.3; U; en) Presto/2.10.289 Version/12.02 (Core 2.10.289)");
         });
-        return it("\"webkitTransitionEnd\" が返ってくる", function() {
+        return it("\"oTransitionEnd\" が返ってくる", function() {
           expect(helper.getTransitionEndEventName()).to.be.a("string");
           return expect(helper.getTransitionEndEventName()).to.equal("oTransitionEnd");
         });

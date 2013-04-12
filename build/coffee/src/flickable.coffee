@@ -1,4 +1,4 @@
-do (root = this, factory = (window, documentd) ->
+do (root = this, factory = (window, document) ->
   NS = "Flickable"
 
   class Helper
@@ -227,14 +227,13 @@ do (root = this, factory = (window, documentd) ->
       else if not @el
         throw new Error("Element Not Found")
 
-      # Set Options
-      @distance     = null
-      @maxPoint     = null
-      @gestureStart = false
-      @didCloneNode = false
 
-      @currentPoint = @currentX  = @maxX       = 0
-      @scrolling    = @moveReady = @startPageX = @startPageY = @basePageX = @startTime = null
+      # Set Options
+      @currentPoint = @currentX = @maxX = 0
+      @gestureStart = @didCloneNode = false
+
+      @distance  = @maxPoint   = @timerId    = @scrolling =
+      @moveReady = @startPageX = @startPageY = @basePageX = @startTime = null
 
       @opts.use3d        = if @opts.disable3d then false else @support.transform3d
       @opts.useJsAnimate = false
@@ -242,7 +241,9 @@ do (root = this, factory = (window, documentd) ->
       @opts.disable3d    = @opts.disable3d    or false
 
       @opts.autoPlay     = @opts.autoPlay     or false
-      @opts.interval     = @opts.interval     or 6600
+      # @opts.interval     = @opts.interval     or 6600
+      # @opts.interval     = @opts.interval     or 500
+      @opts.interval     = @opts.interval     or 2500
       @opts.loop         = @opts.loop         or if @opts.autoPlay then true else false
 
       @opts.transition   = @opts.transition   or {}
@@ -272,7 +273,7 @@ do (root = this, factory = (window, documentd) ->
 
       @el.addEventListener(@events.start, @, false)
 
-      if @opts.autoPlay then @_autoPlay()
+      if @opts.autoPlay then @_startAutoPlay()
       if @opts.loop     then @_cloneNode()
 
       @refresh()
@@ -289,6 +290,8 @@ do (root = this, factory = (window, documentd) ->
           @_click(event)
 
     refresh: ->
+      @_setTotalWidth()
+
       getMaxPoint = =>
         childNodes = @el.childNodes
         itemLength = 0
@@ -314,23 +317,15 @@ do (root = this, factory = (window, documentd) ->
 
     toPrev: ->
       if not @hasPrev() then return
-
       @moveToPoint(@currentPoint - 1)
 
     toNext: ->
       if not @hasNext() then return
-
       @moveToPoint(@currentPoint + 1) 
 
     moveToPoint: (point = @currentPoint, duration = @opts.transition["duration"]) ->
-      beforePoint = @currentPoint
-
-      if point < 0
-        @currentPoint = 0
-      else if point > @maxPoint
-        @currentPoint = @maxPoint
-      else
-        @currentPoint = parseInt(point, 10)
+      beforePoint   = @currentPoint
+      @currentPoint = if point < 0 then 0 else if point > @maxPoint then @maxPoint else parseInt(point, 10)
 
       if @support.cssAnimation
         @helper.setStyle @el,
@@ -342,11 +337,12 @@ do (root = this, factory = (window, documentd) ->
 
       if (beforePoint isnt @currentPoint)
         @helper.triggerEvent(@el, "flpointmove", true, false)
+        if @opts.loop then @_loop()
 
     _setX: (x, duration = @opts.transition["duration"]) ->
       @currentX = x
 
-      if @support.cssAnimation
+      if @support.cssAnimation and not @browser.isLegacy
         @helper.setStyle @el,
           transform: @_getTranslate(x)
       else if @opts.useJsAnimate
@@ -356,6 +352,12 @@ do (root = this, factory = (window, documentd) ->
 
     _touchStart: (event) ->
       if @opts.disableTouch or @gestureStart then return
+
+      if @opts.loop
+        if @currentPoint is @maxPoint
+          @moveToPoint(1, 0)
+        else if @currentPoint is 0
+          @moveToPoint(@maxPoint - 1, 0)
 
       @el.addEventListener(@events.move,     @, false)
       document.addEventListener(@events.end, @, false)
@@ -381,6 +383,7 @@ do (root = this, factory = (window, documentd) ->
       @helper.triggerEvent(@el, "fltouchstart", true, false)
 
     _touchMove: (event) ->
+      if @opts.autoPlay then @_clearAutoPlay() 
       if not @scrolling or @gestureStart then return
 
       pageX = @helper.getPage(event, "pageX")
@@ -422,6 +425,7 @@ do (root = this, factory = (window, documentd) ->
           @scrolling = false
 
       @basePageX = pageX
+      if @opts.autoPlay then @_startAutoPlay()       
 
     _touchEnd: (event) ->
       @el.removeEventListener(@events.move, @, false)
@@ -468,7 +472,7 @@ do (root = this, factory = (window, documentd) ->
       childNodes = @el.childNodes
       itemAry    = []
 
-      if not @loop or @didCloneNode then return
+      if not @opts.loop or @didCloneNode then return
 
       for node in childNodes
         if node.nodeType is 1 then itemAry.push(node)
@@ -481,15 +485,22 @@ do (root = this, factory = (window, documentd) ->
 
       @didCloneNode = true
 
-    _autoPlay: ->
-      if not @autoPlay then return
+    _startAutoPlay: ->
+      if not @opts.autoPlay then return
 
-      @timerId = window.setInterval =>
-        @toNext()
-      , @opts.interval
+      toNextFn = => @toNext()
+      interval = @opts.interval
+
+      do =>
+        @timerId = window.setInterval(toNextFn, interval)
 
     _clearAutoPlay: ->
+      # timerId = @timerId
       window.clearInterval(@timerId)
+
+    tmpClearAutoPlay: ->
+      timerId = @timerId
+      window.clearInterval(timerId)
 
     _setTotalWidth: ->
       childNodes = @el.childNodes
@@ -532,11 +543,11 @@ do (root = this, factory = (window, documentd) ->
       duration = parseInt(duration, 10)
       easing   = (time, duration) ->
         -(time /= duration) * (time - 2)
-      timer    = setInterval ->
+      timer    = window.setInterval ->
         time = new Date() - begin
 
         if time > duration
-          clearInterval(timer)
+          window.clearInterval(timer)
           now = to
         else
           pos = easing(time, duration)

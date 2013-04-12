@@ -9,7 +9,7 @@
     } else {
       return factory(root, root.document);
     }
-  })(this, function(window, documentd) {
+  })(this, function(window, document) {
     var Flickable, Helper, NS;
 
     NS = "Flickable";
@@ -292,18 +292,15 @@
         } else if (!this.el) {
           throw new Error("Element Not Found");
         }
-        this.distance = null;
-        this.maxPoint = null;
-        this.gestureStart = false;
-        this.didCloneNode = false;
         this.currentPoint = this.currentX = this.maxX = 0;
-        this.scrolling = this.moveReady = this.startPageX = this.startPageY = this.basePageX = this.startTime = null;
+        this.gestureStart = this.didCloneNode = false;
+        this.distance = this.maxPoint = this.timerId = this.scrolling = this.moveReady = this.startPageX = this.startPageY = this.basePageX = this.startTime = null;
         this.opts.use3d = this.opts.disable3d ? false : this.support.transform3d;
         this.opts.useJsAnimate = false;
         this.opts.disableTouch = this.opts.disableTouch || false;
         this.opts.disable3d = this.opts.disable3d || false;
         this.opts.autoPlay = this.opts.autoPlay || false;
-        this.opts.interval = this.opts.interval || 6600;
+        this.opts.interval = this.opts.interval || 2500;
         this.opts.loop = this.opts.loop || (this.opts.autoPlay ? true : false);
         this.opts.transition = this.opts.transition || {};
         this.opts.transition = {
@@ -335,7 +332,7 @@
         }
         this.el.addEventListener(this.events.start, this, false);
         if (this.opts.autoPlay) {
-          this._autoPlay();
+          this._startAutoPlay();
         }
         if (this.opts.loop) {
           this._cloneNode();
@@ -360,6 +357,7 @@
         var getMaxPoint,
           _this = this;
 
+        this._setTotalWidth();
         getMaxPoint = function() {
           var childNodes, i, itemLength, node, _i, _len;
 
@@ -414,13 +412,7 @@
           duration = this.opts.transition["duration"];
         }
         beforePoint = this.currentPoint;
-        if (point < 0) {
-          this.currentPoint = 0;
-        } else if (point > this.maxPoint) {
-          this.currentPoint = this.maxPoint;
-        } else {
-          this.currentPoint = parseInt(point, 10);
-        }
+        this.currentPoint = point < 0 ? 0 : point > this.maxPoint ? this.maxPoint : parseInt(point, 10);
         if (this.support.cssAnimation) {
           this.helper.setStyle(this.el, {
             transitionDuration: duration
@@ -430,7 +422,10 @@
         }
         this._setX(-this.currentPoint * this.distance, duration);
         if (beforePoint !== this.currentPoint) {
-          return this.helper.triggerEvent(this.el, "flpointmove", true, false);
+          this.helper.triggerEvent(this.el, "flpointmove", true, false);
+          if (this.opts.loop) {
+            return this._loop();
+          }
         }
       };
 
@@ -439,7 +434,7 @@
           duration = this.opts.transition["duration"];
         }
         this.currentX = x;
-        if (this.support.cssAnimation) {
+        if (this.support.cssAnimation && !this.browser.isLegacy) {
           return this.helper.setStyle(this.el, {
             transform: this._getTranslate(x)
           });
@@ -453,6 +448,13 @@
       Flickable.prototype._touchStart = function(event) {
         if (this.opts.disableTouch || this.gestureStart) {
           return;
+        }
+        if (this.opts.loop) {
+          if (this.currentPoint === this.maxPoint) {
+            this.moveToPoint(1, 0);
+          } else if (this.currentPoint === 0) {
+            this.moveToPoint(this.maxPoint - 1, 0);
+          }
         }
         this.el.addEventListener(this.events.move, this, false);
         document.addEventListener(this.events.end, this, false);
@@ -479,6 +481,9 @@
       Flickable.prototype._touchMove = function(event) {
         var deltaX, deltaY, distX, isPrevent, newX, pageX, pageY;
 
+        if (this.opts.autoPlay) {
+          this._clearAutoPlay();
+        }
         if (!this.scrolling || this.gestureStart) {
           return;
         }
@@ -519,7 +524,10 @@
             this.scrolling = false;
           }
         }
-        return this.basePageX = pageX;
+        this.basePageX = pageX;
+        if (this.opts.autoPlay) {
+          return this._startAutoPlay();
+        }
       };
 
       Flickable.prototype._touchEnd = function(event) {
@@ -586,7 +594,7 @@
 
         childNodes = this.el.childNodes;
         itemAry = [];
-        if (!this.loop || this.didCloneNode) {
+        if (!this.opts.loop || this.didCloneNode) {
           return;
         }
         for (_i = 0, _len = childNodes.length; _i < _len; _i++) {
@@ -602,19 +610,31 @@
         return this.didCloneNode = true;
       };
 
-      Flickable.prototype._autoPlay = function() {
-        var _this = this;
+      Flickable.prototype._startAutoPlay = function() {
+        var interval, toNextFn,
+          _this = this;
 
-        if (!this.autoPlay) {
+        if (!this.opts.autoPlay) {
           return;
         }
-        return this.timerId = window.setInterval(function() {
+        toNextFn = function() {
           return _this.toNext();
-        }, this.opts.interval);
+        };
+        interval = this.opts.interval;
+        return (function() {
+          return _this.timerId = window.setInterval(toNextFn, interval);
+        })();
       };
 
       Flickable.prototype._clearAutoPlay = function() {
         return window.clearInterval(this.timerId);
+      };
+
+      Flickable.prototype.tmpClearAutoPlay = function() {
+        var timerId;
+
+        timerId = this.timerId;
+        return window.clearInterval(timerId);
       };
 
       Flickable.prototype._setTotalWidth = function() {
@@ -673,12 +693,12 @@
         easing = function(time, duration) {
           return -(time /= duration) * (time - 2);
         };
-        return timer = setInterval(function() {
+        return timer = window.setInterval(function() {
           var now, pos, time;
 
           time = new Date() - begin;
           if (time > duration) {
-            clearInterval(timer);
+            window.clearInterval(timer);
             now = to;
           } else {
             pos = easing(time, duration);
