@@ -4,6 +4,14 @@ expect = chai.expect
 describe "Helper Class", ->
   helper = new Helper()
 
+  # UserAgent を偽装するヘルパ
+  spoofUserAgent = (ua) ->
+    _navigator = window.navigator
+    window.navigator = new Object()
+    window.navigator.__proto__ = _navigator
+    window.navigator.__defineGetter__ "userAgent", ->
+      return ua
+
   describe ".getPage()", ->
     el = $("<div>")
     moveEvent = if "ontouchstart" in window then "touchmove" else "mousemove"
@@ -71,14 +79,16 @@ describe "Helper Class", ->
       expect(el.getAttribute("style")).to.equal("width: 100px; height: 100px; -webkit-transform: translate(0, 0); transition: 0ms ease; -webkit-transition: 0ms ease;")
 
   describe ".getCSSVal()", ->
+    fn = (arg) -> helper.getCSSVal(arg)
+
     it "仮に webkit だとしたら、transform を入れると \"-webkit-transform\" が返ってくる", ->
-      expect(helper.getCSSVal("transform")).to.be.a("string")
-      expect(helper.getCSSVal("transform")).to.equal("-webkit-transform")
+      expect(fn("transform")).to.be.a("string")
+      expect(fn("transform")).to.equal("-webkit-transform")
     it "width とか prefix なしで余裕なプロパティいれるとありのまま木の実ナナで返ってくる", ->
-      expect(helper.getCSSVal("width")).to.be.a("string")
-      expect(helper.getCSSVal("width")).to.equal("width")
+      expect(fn("width")).to.be.a("string")
+      expect(fn("width")).to.equal("width")
     it "うっかり配列とか入れたら TypeError 投げつけて激おこプンプン丸", ->
-      (expect -> helper.getCSSVal([1..3])).to.throw(TypeError)
+      (expect -> fn([1..3])).to.throw(TypeError)
 
   describe ".ucFirst()", ->
     it "\"webkitTransform\" とか渡すと \"WebkitTransform\" で返ってくる", ->
@@ -146,13 +156,7 @@ describe "Helper Class", ->
       (expect -> helper.triggerEvent("el", eventName, true, false)).to.throw(Error) 
 
   describe ".checkBrowser()", ->
-    # UserAgent を偽装するヘルパ
-    spoofUserAgent = (ua) ->
-      _navigator = window.navigator
-      window.navigator = new Object()
-      window.navigator.__proto__ = _navigator
-      window.navigator.__defineGetter__ "userAgent", ->
-        return ua
+    fn = (arg) -> helper.checkBrowser[arg]
 
     describe "iOS 6.1.3 で試してみました", ->
       spoofUserAgent("Mozilla/5.0 (iPhone; CPU iPhone OS 6_1_3 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) Mobile/10B329")
@@ -193,37 +197,99 @@ describe "Helper Class", ->
         expect(helper.checkBrowser().isLegacy).to.be.true
 
   describe ".checkSupport()", ->
-    hasTouch = helper.checkSupport().touch
+    fn       = helper.checkSupport()
+    hasTouch = fn.touch
 
     describe "WebKit 前提でございやんす", ->
       if hasTouch
         it "タッチイベントもってるから touch: true が返ってくる", ->
-          expect(helper.checkSupport().touch).to.be.true
+          expect(fn.touch).to.be.true
       else
         it "タッチイベントもってないから touch: false が返ってくる", ->
-          expect(helper.checkSupport().touch).to.be.false
+          expect(fn.touch).to.be.false
       it "天下の WebKit さんなら Transform3d くらい対応してるはず", ->
-        expect(helper.checkSupport().transform3d).to.be.true
+        expect(fn.transform3d).to.be.true
       it "Transform3d に対応してる、すなわち cssAnimation: true が返ってくる", ->
-        expect(helper.checkSupport().cssAnimation).to.be.true
+        expect(fn.cssAnimation).to.be.true
 
   describe ".checkTouchEvents()", ->
+    fn       = helper.checkTouchEvents()
     hasTouch = helper.checkSupport().touch
 
     if hasTouch
       describe "タッチイベント持っていますね", ->
         it "なもんで start: \"touchstart\" が返ってくる", ->
-          expect(helper.checkTouchEvents().start).to.equal("touchstart")
+          expect(fn.start).to.equal("touchstart")
         it "なもんで move: \"touchmove\" が返ってくる", ->
           expect(helper.checkTouchEvents().move).to.equal("touchmove")
         it "なもんで end: \"touchend\" が返ってくる", ->
-          expect(helper.checkTouchEvents().end).to.equal("touchend")
+          expect(fn.end).to.equal("touchend")
     else
       describe "タッチイベント持ってませんね", ->
         it "なもんで start: \"mousedown\" が返ってくる", ->
-          expect(helper.checkTouchEvents().start).to.equal("mousedown")
+          expect(fn.start).to.equal("mousedown")
         it "なもんで move: \"mousemove\" が返ってくる", ->
-          expect(helper.checkTouchEvents().move).to.equal("mousemove")
+          expect(fn.move).to.equal("mousemove")
         it "なもんで end: \"mouseup\" が返ってくる", ->
-          expect(helper.checkTouchEvents().end).to.equal("mouseup")
+          expect(fn.end).to.equal("mouseup")
       
+  describe ".getWidth()", ->
+    el = document.createElement("div")
+    fn = (arg) -> helper.getWidth(arg)
+
+    beforeEach (done) ->
+      el.style = ""
+      done()
+
+    describe "width: 100px; な要素の幅を取得すると", ->
+      before ->
+        el.style.width = "100px"
+
+      it "Number で 100 が返ってくる", ->
+        expect(fn(el)).to.be.a("number")
+        expect(fn(el)).to.equal(100)
+
+    describe "width: 80px; padding-right: 10px; な要素だと", ->
+      before ->
+        el.style.width        = "80px"
+        el.style.paddingRight = "10px"
+
+      it "幅 80 と padding の 10 足して 90 が返ってくる。", ->
+        expect(fn(el)).to.be.a("number")
+        expect(fn(el)).to.equal(90)
+
+    describe "width: 80px; padding-right: 10px; -webkit-box-sizing: border-box; box-sizing: border-box; な要素を取得すると", ->
+      before ->
+        el.style.width           = "80px"
+        el.style.paddingRight    = "10px"
+        el.style.webkitBoxSizing = "border-box";
+        el.style.boxSizing       = "border-box";
+
+      it "90 なのかなーと思いきや box-sizing: border-box; の効能で 80 が返ってくる。", ->
+        expect(fn(el)).to.be.a("number")
+        expect(fn(el)).to.equal(80)
+
+  describe ".getTransitionEndEventName()", ->
+    describe "Google Chrome だと", ->
+      before ->
+        spoofUserAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_3) AppleWebKit/537.31 (KHTML, like Gecko) Chrome/26.0.1410.65 Safari/537.31")
+
+      it "\"webkitTransitionEnd\" が返ってくる", ->
+        expect(helper.getTransitionEndEventName()).to.be.a("string")
+        expect(helper.getTransitionEndEventName()).to.equal("webkitTransitionEnd")
+
+    describe "Firefox だと", ->
+      before ->
+        spoofUserAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10.8; rv:19.0) Gecko/20100101 Firefox/19.0")
+
+      it "\"transitionend\" が返ってくる", ->
+        expect(helper.getTransitionEndEventName()).to.be.a("string")
+        expect(helper.getTransitionEndEventName()).to.equal("transitionend")
+
+    describe "Opera だと", ->
+      before ->
+        spoofUserAgent("Opera/9.80 (Macintosh; Intel Mac OS X 10.8.3; U; en) Presto/2.10.289 Version/12.02 (Core 2.10.289)")
+
+      it "\"oTransitionEnd\" が返ってくる", ->
+        expect(helper.getTransitionEndEventName()).to.be.a("string")
+        expect(helper.getTransitionEndEventName()).to.equal("oTransitionEnd")

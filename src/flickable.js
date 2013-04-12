@@ -9,7 +9,7 @@
     } else {
       return factory(root, root.document);
     }
-  })(this, function(window, documentd) {
+  })(this, function(window, document) {
     var Flickable, Helper, NS;
 
     NS = "Flickable";
@@ -176,6 +176,101 @@
         };
       };
 
+      Helper.prototype.getWidth = function(element) {
+        var border, boxSizingVal, css, hasBoxSizing, padding, styleParser, width;
+
+        if (element === void 0) {
+          throw new Error("Element Not Found");
+        }
+        css = window.getComputedStyle(element);
+        boxSizingVal = void 0;
+        hasBoxSizing = (function() {
+          var prop, properties, _i, _len;
+
+          properties = ["-webkit-box-sizing", "-moz-box-sizing", "-o-box-sizing", "-ms-box-sizing", "box-sizing"];
+          for (_i = 0, _len = properties.length; _i < _len; _i++) {
+            prop = properties[_i];
+            if (element.style[prop] !== void 0) {
+              boxSizingVal = element.style[prop];
+              return true;
+            }
+          }
+          return false;
+        })();
+        if (!hasBoxSizing || boxSizingVal === "content-box") {
+          styleParser = function(props) {
+            var i, prop, total, value, _i, _len;
+
+            value = [];
+            total = 0;
+            for (i = _i = 0, _len = props.length; _i < _len; i = ++_i) {
+              prop = props[i];
+              if (css[prop]) {
+                value[i] = parseFloat(css[props[0]].match(/\d+/), 10);
+                total += value[i];
+              }
+            }
+            return total;
+          };
+          border = styleParser(["border-right-width", "border-left-width"]);
+          padding = styleParser(["padding-right", "padding-left"]);
+          return width = element.scrollWidth + border + padding;
+        } else if (element.scrollWidth === 0) {
+          width = parseFloat(element.style.width.match(/\d+/), 10);
+          if (!element.style.boxSizing || !element.style.webkitBoxSizing) {
+            if (element.style.paddingRight) {
+              width += parseFloat(element.style.paddingRight.match(/\d+/), 10);
+            }
+            if (element.style.paddingLeft) {
+              width += parseFloat(element.style.paddingLeft.match(/\d+/), 10);
+            }
+          }
+          return width;
+        } else {
+          return width = element.scrollWidth;
+        }
+      };
+
+      Helper.prototype.getTranslate = function(use3d, x, y, z) {
+        if (use3d == null) {
+          use3d = true;
+        }
+        if (y == null) {
+          y = 0;
+        }
+        if (z == null) {
+          z = 0;
+        }
+        if (this.opts.use3d) {
+          return "translate3d(" + x + "px, 0, 0)";
+        } else {
+          return "translate(" + x + "px, 0)";
+        }
+      };
+
+      Helper.prototype.getTransitionEndEventName = function() {
+        var browser, match, transitionEndName, ua, version;
+
+        ua = window.navigator.userAgent.toLowerCase();
+        match = /(webkit)[ \/]([\w.]+)/.exec(ua) || /(firefox)[ \/]([\w.]+)/.exec(ua) || /(msie) ([\w.]+)/.exec(ua) || /(opera)(?:.*version|)[ \/]([\w.]+)/.exec(ua) || [];
+        browser = match[1];
+        version = parseFloat(match[2], 10);
+        if (browser === "msie" && version >= 10) {
+          browser = "modernIE";
+        }
+        switch (browser) {
+          case "webkit":
+            return transitionEndName = "webkitTransitionEnd";
+          case "opera":
+            return transitionEndName = "oTransitionEnd";
+          case "firefox":
+          case "modernIE":
+            return transitionEndName = "transitionend";
+          default:
+            return transitionEndName = void 0;
+        }
+      };
+
       return Helper;
 
     })();
@@ -197,15 +292,16 @@
         } else if (!this.el) {
           throw new Error("Element Not Found");
         }
-        this.distance = null;
-        this.maxPoint = null;
-        this.gestureStart = false;
         this.currentPoint = this.currentX = this.maxX = 0;
-        this.scrolling = this.moveReady = this.startPageX = this.startPageY = this.basePageX = this.startTime = null;
+        this.gestureStart = this.didCloneNode = false;
+        this.distance = this.maxPoint = this.timerId = this.scrolling = this.moveReady = this.startPageX = this.startPageY = this.basePageX = this.startTime = null;
         this.opts.use3d = this.opts.disable3d ? false : this.support.transform3d;
         this.opts.useJsAnimate = false;
         this.opts.disableTouch = this.opts.disableTouch || false;
         this.opts.disable3d = this.opts.disable3d || false;
+        this.opts.autoPlay = this.opts.autoPlay || false;
+        this.opts.interval = this.opts.interval || 2500;
+        this.opts.loop = this.opts.loop || (this.opts.autoPlay ? true : false);
         this.opts.transition = this.opts.transition || {};
         this.opts.transition = {
           timingFunction: this.opts.transition["timingFunction"] || "cubic-bezier(0.23, 1, 0.32, 1)",
@@ -234,8 +330,14 @@
             return _this.gestureStart = false;
           }, false);
         }
-        this.refresh();
         this.el.addEventListener(this.events.start, this, false);
+        if (this.opts.autoPlay) {
+          this._startAutoPlay();
+        }
+        if (this.opts.loop) {
+          this._cloneNode();
+        }
+        this.refresh();
       }
 
       Flickable.prototype.handleEvent = function(event) {
@@ -255,6 +357,7 @@
         var getMaxPoint,
           _this = this;
 
+        this._setTotalWidth();
         getMaxPoint = function() {
           var childNodes, i, itemLength, node, _i, _len;
 
@@ -309,13 +412,7 @@
           duration = this.opts.transition["duration"];
         }
         beforePoint = this.currentPoint;
-        if (point < 0) {
-          this.currentPoint = 0;
-        } else if (point > this.maxPoint) {
-          this.currentPoint = this.maxPoint;
-        } else {
-          this.currentPoint = parseInt(point, 10);
-        }
+        this.currentPoint = point < 0 ? 0 : point > this.maxPoint ? this.maxPoint : parseInt(point, 10);
         if (this.support.cssAnimation) {
           this.helper.setStyle(this.el, {
             transitionDuration: duration
@@ -325,7 +422,10 @@
         }
         this._setX(-this.currentPoint * this.distance, duration);
         if (beforePoint !== this.currentPoint) {
-          return this.helper.triggerEvent(this.el, "flpointmove", true, false);
+          this.helper.triggerEvent(this.el, "flpointmove", true, false);
+          if (this.opts.loop) {
+            return this._loop();
+          }
         }
       };
 
@@ -334,7 +434,7 @@
           duration = this.opts.transition["duration"];
         }
         this.currentX = x;
-        if (this.support.cssAnimation) {
+        if (this.support.cssAnimation && !this.browser.isLegacy) {
           return this.helper.setStyle(this.el, {
             transform: this._getTranslate(x)
           });
@@ -348,6 +448,13 @@
       Flickable.prototype._touchStart = function(event) {
         if (this.opts.disableTouch || this.gestureStart) {
           return;
+        }
+        if (this.opts.loop) {
+          if (this.currentPoint === this.maxPoint) {
+            this.moveToPoint(1, 0);
+          } else if (this.currentPoint === 0) {
+            this.moveToPoint(this.maxPoint - 1, 0);
+          }
         }
         this.el.addEventListener(this.events.move, this, false);
         document.addEventListener(this.events.end, this, false);
@@ -374,6 +481,9 @@
       Flickable.prototype._touchMove = function(event) {
         var deltaX, deltaY, distX, isPrevent, newX, pageX, pageY;
 
+        if (this.opts.autoPlay) {
+          this._clearAutoPlay();
+        }
         if (!this.scrolling || this.gestureStart) {
           return;
         }
@@ -414,7 +524,10 @@
             this.scrolling = false;
           }
         }
-        return this.basePageX = pageX;
+        this.basePageX = pageX;
+        if (this.opts.autoPlay) {
+          return this._startAutoPlay();
+        }
       };
 
       Flickable.prototype._touchEnd = function(event) {
@@ -476,6 +589,97 @@
         }
       };
 
+      Flickable.prototype._cloneNode = function() {
+        var childNodes, firstItem, itemAry, lastItem, node, _i, _len;
+
+        childNodes = this.el.childNodes;
+        itemAry = [];
+        if (!this.opts.loop || this.didCloneNode) {
+          return;
+        }
+        for (_i = 0, _len = childNodes.length; _i < _len; _i++) {
+          node = childNodes[_i];
+          if (node.nodeType === 1) {
+            itemAry.push(node);
+          }
+        }
+        firstItem = itemAry.shift();
+        lastItem = itemAry.pop();
+        this.el.insertBefore(lastItem.cloneNode(true), firstItem);
+        this.el.appendChild(firstItem.cloneNode(true));
+        return this.didCloneNode = true;
+      };
+
+      Flickable.prototype._startAutoPlay = function() {
+        var interval, toNextFn,
+          _this = this;
+
+        if (!this.opts.autoPlay) {
+          return;
+        }
+        toNextFn = function() {
+          return _this.toNext();
+        };
+        interval = this.opts.interval;
+        return (function() {
+          return _this.timerId = window.setInterval(toNextFn, interval);
+        })();
+      };
+
+      Flickable.prototype._clearAutoPlay = function() {
+        return window.clearInterval(this.timerId);
+      };
+
+      Flickable.prototype.tmpClearAutoPlay = function() {
+        var timerId;
+
+        timerId = this.timerId;
+        return window.clearInterval(timerId);
+      };
+
+      Flickable.prototype._setTotalWidth = function() {
+        var childNodes, itemAry, itemWidth, node, totalWidth, _i, _len;
+
+        childNodes = this.el.childNodes;
+        itemAry = [];
+        for (_i = 0, _len = childNodes.length; _i < _len; _i++) {
+          node = childNodes[_i];
+          if (node.nodeType === 1) {
+            itemAry.push(node);
+          }
+        }
+        itemWidth = this.helper.getWidth(itemAry[0]);
+        totalWidth = itemWidth * itemAry.length;
+        return this.el.style.width = "" + totalWidth + "px";
+      };
+
+      Flickable.prototype._loop = function() {
+        var clearTime, lastPoint, smartLoop, timerId, transitionEndEventName,
+          _this = this;
+
+        lastPoint = this.maxPoint - 1;
+        clearTime = this.opts.interval / 2;
+        smartLoop = function() {
+          if (_this.currentPoint === _this.maxPoint) {
+            return _this.moveToPoint(1, 0);
+          } else if (_this.currentPoint === 0) {
+            return _this.moveToPoint(lastPoint, 0);
+          }
+        };
+        transitionEndEventName = this.helper.getTransitionEndEventName();
+        if (transitionEndEventName !== void 0) {
+          this.el.addEventListener(transitionEndEventName, smartLoop, false);
+          return window.setTimeout(function() {
+            return _this.el.removeEventListener(transitionEndEventName, smartLoop, false);
+          }, clearTime);
+        } else {
+          timerId = smartLoop;
+          return window.clearTimeout(function() {
+            return smartLoop();
+          }, clearTime);
+        }
+      };
+
       Flickable.prototype._jsAnimate = function(x, duration) {
         var begin, easing, from, timer, to;
 
@@ -489,12 +693,12 @@
         easing = function(time, duration) {
           return -(time /= duration) * (time - 2);
         };
-        return timer = setInterval(function() {
+        return timer = window.setInterval(function() {
           var now, pos, time;
 
           time = new Date() - begin;
           if (time > duration) {
-            clearInterval(timer);
+            window.clearInterval(timer);
             now = to;
           } else {
             pos = easing(time, duration);
