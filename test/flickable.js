@@ -7,9 +7,13 @@
   expect = chai.expect;
 
   describe("Helper Class", function() {
-    var helper, spoofUserAgent;
+    var div, flickable, helper, spoofUserAgent;
 
-    helper = new Helper();
+    div = document.createElement("div");
+    div.style.width = "100px";
+    div.style.height = "100px";
+    flickable = new Flickable(div, {});
+    helper = flickable.helper;
     spoofUserAgent = function(ua) {
       var _navigator;
 

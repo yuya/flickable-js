@@ -300,7 +300,7 @@
         this.opts.disableTouch = this.opts.disableTouch || false;
         this.opts.disable3d = this.opts.disable3d || false;
         this.opts.autoPlay = this.opts.autoPlay || false;
-        this.opts.interval = this.opts.interval || 2500;
+        this.opts.interval = this.opts.interval || 6600;
         this.opts.loop = this.opts.loop || (this.opts.autoPlay ? true : false);
         this.opts.transition = this.opts.transition || {};
         this.opts.transition = {
@@ -330,6 +330,12 @@
             return _this.gestureStart = false;
           }, false);
         }
+        window.addEventListener("blur", function() {
+          return _this._clearAutoPlay();
+        }, false);
+        window.addEventListener("focus", function() {
+          return _this._startAutoPlay();
+        }, false);
         this.el.addEventListener(this.events.start, this, false);
         if (this.opts.autoPlay) {
           this._startAutoPlay();
@@ -641,7 +647,7 @@
         var childNodes, itemAry, itemWidth, node, totalWidth, _i, _len;
 
         childNodes = this.el.childNodes;
-        itemAry = [];
+        itemAry = childNodes.length !== 0 ? [] : [this.el];
         for (_i = 0, _len = childNodes.length; _i < _len; _i++) {
           node = childNodes[_i];
           if (node.nodeType === 1) {
@@ -715,7 +721,6 @@
       return Flickable;
 
     })();
-    window["Helper"] = Helper;
     return window[NS] = Flickable;
   });
 

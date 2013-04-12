@@ -34,7 +34,7 @@ do (root = this, factory = (window, document) ->
           for prefix in @prefixes
             _prop = @ucFirst(prefix) + @ucFirst(prop)
 
-            # @prefixes とマッチした
+            # @prefixes とマッチしたら
             if style[_prop] isnt undefined
               @saveProp[prop] = _prop
               style[_prop]    = val
@@ -241,9 +241,7 @@ do (root = this, factory = (window, document) ->
       @opts.disable3d    = @opts.disable3d    or false
 
       @opts.autoPlay     = @opts.autoPlay     or false
-      # @opts.interval     = @opts.interval     or 6600
-      # @opts.interval     = @opts.interval     or 500
-      @opts.interval     = @opts.interval     or 2500
+      @opts.interval     = @opts.interval     or 6600
       @opts.loop         = @opts.loop         or if @opts.autoPlay then true else false
 
       @opts.transition   = @opts.transition   or {}
@@ -270,6 +268,20 @@ do (root = this, factory = (window, document) ->
         document.addEventListener "gestureend",   =>
           @gestureStart = false
         , false
+
+      window.addEventListener "blur",  =>
+        @_clearAutoPlay()
+      , false
+      window.addEventListener "focus", =>
+        @_startAutoPlay()
+      , false
+      # $(window).on
+      #   "blur": (event) =>
+      #     document.title = "戻ってこいよゴルァ"
+      #     @_clearAutoPlay()
+      #   "focus": (event) =>
+      #     document.title = "クイキン";
+      #     @_startAutoPlay()
 
       @el.addEventListener(@events.start, @, false)
 
@@ -495,7 +507,6 @@ do (root = this, factory = (window, document) ->
         @timerId = window.setInterval(toNextFn, interval)
 
     _clearAutoPlay: ->
-      # timerId = @timerId
       window.clearInterval(@timerId)
 
     tmpClearAutoPlay: ->
@@ -504,7 +515,7 @@ do (root = this, factory = (window, document) ->
 
     _setTotalWidth: ->
       childNodes = @el.childNodes
-      itemAry    = []
+      itemAry    = if childNodes.length isnt 0 then [] else [@el]
 
       for node in childNodes
         if node.nodeType is 1 then itemAry.push(node)
@@ -559,9 +570,7 @@ do (root = this, factory = (window, document) ->
     destroy: ->
       @el.removeEventListener(@events.start, @, false)
 
-  window["Helper"] = Helper
   window[NS]       = Flickable
-
 ) ->
   # AMD
   if typeof define is "function" and define.amd is "object"
