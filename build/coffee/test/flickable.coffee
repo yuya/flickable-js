@@ -1,15 +1,10 @@
 "use strict"
-expect    = chai.expect
+expect = chai.expect
+console.log Flickable.Helper
+# helper = new Flickable().helper
 
+###
 describe "Helper Class", ->
-  div = document.createElement("div")
-
-  div.style.width  = "100px"
-  div.style.height = "100px"
-
-  flickable = new Flickable(div, {}) 
-  helper    = flickable.helper
-
   # UserAgent を偽装するヘルパ
   spoofUserAgent = (ua) ->
     _navigator = window.navigator
@@ -299,3 +294,5 @@ describe "Helper Class", ->
       it "\"oTransitionEnd\" が返ってくる", ->
         expect(helper.getTransitionEndEventName()).to.be.a("string")
         expect(helper.getTransitionEndEventName()).to.equal("oTransitionEnd")
+
+###
