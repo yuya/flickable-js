@@ -1,6 +1,11 @@
-expect = chai.expect
-###
-helper = new Flickable["Helper"]
+expect  = chai.expect
+element = document.createElement "div"
+
+element.style.width  = "100px"
+element.style.height = "100px"
+
+flickable = new window.Flickable element, {}
+helper    = flickable.helper
 
 describe "Helper Class", ->
   # UserAgent を偽装するヘルパ
@@ -292,4 +297,3 @@ describe "Helper Class", ->
       it "\"oTransitionEnd\" が返ってくる", ->
         expect(helper.getTransitionEndEventName()).to.be.a("string")
         expect(helper.getTransitionEndEventName()).to.equal("oTransitionEnd")
-###

@@ -235,12 +235,11 @@ do (global = this, document = this.document, helper = new global.Flickable.Helpe
       else if newPoint > @maxPoint
         newPoint = @maxPoint
 
-      @_touchAfter(
+      @_touchAfter
         moved:         newPoint isnt @currentPoint
         originalPoint: @currentPoint
         newPoint:      newPoint
         cancelled:     false
-      )
 
       @moveToPoint(newPoint)
 

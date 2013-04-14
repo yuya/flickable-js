@@ -8,14 +8,14 @@
   } else {
     return factory(root, root.document);
   }
-})(this, function(window, document) {
+})(this, function(global, document) {
   var NS;
 
   NS = "Flickable";
-  return window[NS] = {};
+  return global[NS] = {};
 });
 
-(function(window, document) {
+(function(global, document) {
   var Helper;
 
   Helper = (function() {
@@ -137,7 +137,7 @@
     Helper.prototype.checkBrowser = function() {
       var android, browserName, browserVersion, ios, ua;
 
-      ua = window.navigator.userAgent.toLowerCase();
+      ua = global.navigator.userAgent.toLowerCase();
       ios = ua.match(/(?:iphone\sos|ip[oa]d.*os)\s([\d_]+)/);
       android = ua.match(/(android)\s+([\d.]+)/);
       browserName = !!ios ? "ios" : !!android ? "android" : "pc";
@@ -161,8 +161,8 @@
       hasTransform = this.hasProp(["transformProperty", "WebkitTransform", "MozTransform", "msTransform", "OTransform"]);
       hasTransition = this.hasProp(["transitionProperty", "WebkitTransitionProperty", "MozTransitionProperty", "msTransitionProperty", "OTransitionProperty"]);
       return {
-        touch: "ontouchstart" in window,
-        eventListener: "addEventListener" in window,
+        touch: "ontouchstart" in global,
+        eventListener: "addEventListener" in global,
         transform3d: hasTransform3d,
         transform: hasTransform,
         transition: hasTransition,
@@ -187,7 +187,7 @@
       if (element === void 0) {
         throw new Error("Element Not Found");
       }
-      css = window.getComputedStyle(element);
+      css = global.getComputedStyle(element);
       boxSizingVal = void 0;
       hasBoxSizing = (function() {
         var prop, properties, _i, _len;
@@ -256,7 +256,7 @@
     Helper.prototype.getTransitionEndEventName = function() {
       var browser, match, transitionEndName, ua, version;
 
-      ua = window.navigator.userAgent.toLowerCase();
+      ua = global.navigator.userAgent.toLowerCase();
       match = /(webkit)[ \/]([\w.]+)/.exec(ua) || /(firefox)[ \/]([\w.]+)/.exec(ua) || /(msie) ([\w.]+)/.exec(ua) || /(opera)(?:.*version|)[ \/]([\w.]+)/.exec(ua) || [];
       browser = match[1];
       version = parseFloat(match[2], 10);
@@ -279,10 +279,10 @@
     return Helper;
 
   })();
-  return window.Flickable.Helper = Helper;
+  return global.Flickable.Helper = Helper;
 })(this, this.document);
 
-(function(window, document, helper) {
+(function(global, document, helper) {
   var Flickable;
 
   Flickable = (function() {
@@ -341,10 +341,10 @@
           return _this.gestureStart = false;
         }, false);
       }
-      window.addEventListener("blur", function() {
+      global.addEventListener("blur", function() {
         return _this._clearAutoPlay();
       }, false);
-      window.addEventListener("focus", function() {
+      global.addEventListener("focus", function() {
         return _this._startAutoPlay();
       }, false);
       this.el.addEventListener(this.events.start, this, false);
@@ -587,7 +587,7 @@
 
       this.scrolling = false;
       this.moveReady = false;
-      window.setTimeout(function() {
+      global.setTimeout(function() {
         return _this.el.removeEventListener("click", _this, true);
       }, 200);
       return this.helper.triggerEvent(this.el, "fltouchend", true, false, params);
@@ -639,19 +639,19 @@
       };
       interval = this.opts.interval;
       return (function() {
-        return _this.timerId = window.setInterval(toNextFn, interval);
+        return _this.timerId = global.setInterval(toNextFn, interval);
       })();
     };
 
     Flickable.prototype._clearAutoPlay = function() {
-      return window.clearInterval(this.timerId);
+      return global.clearInterval(this.timerId);
     };
 
     Flickable.prototype.tmpClearAutoPlay = function() {
       var timerId;
 
       timerId = this.timerId;
-      return window.clearInterval(timerId);
+      return global.clearInterval(timerId);
     };
 
     Flickable.prototype._setTotalWidth = function() {
@@ -686,12 +686,12 @@
       transitionEndEventName = this.helper.getTransitionEndEventName();
       if (transitionEndEventName !== void 0) {
         this.el.addEventListener(transitionEndEventName, smartLoop, false);
-        return window.setTimeout(function() {
+        return global.setTimeout(function() {
           return _this.el.removeEventListener(transitionEndEventName, smartLoop, false);
         }, clearTime);
       } else {
         timerId = smartLoop;
-        return window.clearTimeout(function() {
+        return global.clearTimeout(function() {
           return smartLoop();
         }, clearTime);
       }
@@ -710,12 +710,12 @@
       easing = function(time, duration) {
         return -(time /= duration) * (time - 2);
       };
-      return timer = window.setInterval(function() {
+      return timer = global.setInterval(function() {
         var now, pos, time;
 
         time = new Date() - begin;
         if (time > duration) {
-          window.clearInterval(timer);
+          global.clearInterval(timer);
           now = to;
         } else {
           pos = easing(time, duration);
@@ -732,5 +732,5 @@
     return Flickable;
 
   })();
-  return window.Flickable = Flickable;
-})(this, this.document, new window.Flickable.Helper());
+  return global.Flickable = Flickable;
+})(this, this.document, new global.Flickable.Helper());
