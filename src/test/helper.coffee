@@ -1,4 +1,3 @@
-expect  = chai.expect
 element = document.createElement "div"
 
 element.style.width  = "100px"
@@ -22,11 +21,11 @@ describe "Helper Class", ->
 
     it "click イベントが発火しただけだし pageX は 0 が返ってくる", ->
       el.on "click", (event) ->
-        expect(helper.getPage(event, "pageX")).to.equal(0)
+        expect(helper.getPage(event, "pageX")).to.be(0)
       el.click()
     it "#{moveEvent} イベントが発火しただけだし pageY は 0 が返ってくる", ->
       el.on moveEvent, (event) ->
-        expect(helper.getPage(event, "pageY")).to.equal(0)
+        expect(helper.getPage(event, "pageY")).to.be(0)
       el.click()
     it "全く関係ない load イベントとかで取得しようとしても undefined とかじゃね シラネ", ->
       evt = document.createEvent("Event")
@@ -49,7 +48,8 @@ describe "Helper Class", ->
       prop = "svgMatrixZ"
       expect(helper.hasProp(prop)).to.be.false
     it "Array でも String でもないのを渡されても困るので TypeError を投げる", ->
-      (expect -> helper.hasProp(undefined)).to.throw(TypeError)
+      (expect -> helper.hasProp(undefined)).to.throwException (err) ->
+        expect(err).to.be.a(TypeError)
 
   describe ".setStyle()", ->
     el = document.createElement("div")
@@ -63,7 +63,7 @@ describe "Helper Class", ->
       helper.setStyle(el,
         display: "block"
       )
-      expect(el.getAttribute("style")).to.equal("display: block;")
+      expect(el.getAttribute("style")).to.be("display: block; ")
     it ("プロパティ複数指定したら、指定した順番に style 属性に入ってるはず"), ->
       helper.setStyle(el,
         display: "none"
@@ -71,7 +71,7 @@ describe "Helper Class", ->
         height: "100px"
         margin: "0px auto"
       )
-      expect(el.getAttribute("style")).to.equal("display: none; width: 100px; height: 100px; margin: 0px auto;")
+      expect(el.getAttribute("style")).to.be("display: none; width: 100px; height: 100px; margin-top: 0px; margin-right: auto; margin-bottom: 0px; margin-left: auto; ")
     it ("prefix が必要なやつはプロパティはよしなに prefix つけて、よしなに纏めてくれるはず"), ->
       helper.setStyle(el,
         width: "100px"
@@ -80,29 +80,31 @@ describe "Helper Class", ->
         transitionTimingFunction: "ease"
         transitionDuration: "0ms"
       )
-      expect(el.getAttribute("style")).to.equal("width: 100px; height: 100px; -webkit-transform: translate(0, 0); transition: 0ms ease; -webkit-transition: 0ms ease;")
+      expect(el.getAttribute("style")).to.be("width: 100px; height: 100px; -webkit-transform: translate(0px, 0px); -webkit-transition-timing-function: ease; -webkit-transition-duration: 0ms; ")
 
   describe ".getCSSVal()", ->
     fn = (arg) -> helper.getCSSVal(arg)
 
     it "仮に webkit だとしたら、transform を入れると \"-webkit-transform\" が返ってくる", ->
       expect(fn("transform")).to.be.a("string")
-      expect(fn("transform")).to.equal("-webkit-transform")
+      expect(fn("transform")).to.be("-webkit-transform")
     it "width とか prefix なしで余裕なプロパティいれるとありのまま木の実ナナで返ってくる", ->
       expect(fn("width")).to.be.a("string")
-      expect(fn("width")).to.equal("width")
+      expect(fn("width")).to.be("width")
     it "うっかり配列とか入れたら TypeError 投げつけて激おこプンプン丸", ->
-      (expect -> fn([1..3])).to.throw(TypeError)
+      (expect -> fn([1..3])).to.throwException (err) ->
+        expect(err).to.be.a(TypeError)
 
   describe ".ucFirst()", ->
     it "\"webkitTransform\" とか渡すと \"WebkitTransform\" で返ってくる", ->
       expect(helper.ucFirst("webkitTransform")).to.be.a("string")
-      expect(helper.ucFirst("webkitTransform")).to.equal("WebkitTransform")
+      expect(helper.ucFirst("webkitTransform")).to.be("WebkitTransform")
     it "String だけどアルファベットじゃない君 (\"123\") はありのままの君", ->
       expect(helper.ucFirst("123")).to.be.a("string")
-      expect(helper.ucFirst("123")).to.equal("123")
+      expect(helper.ucFirst("123")).to.be("123")
     it "String じゃないものだったら TypeError 投げる", ->
-      (expect -> helper.ucFirst([1..3])).to.throw(TypeError)
+      (expect -> helper.ucFirst([1..3])).to.throwException (err) ->
+        expect(err).to.be.a(TypeError)
 
   describe ".triggerEvent()", ->
     el = document.createElement("div")
@@ -118,7 +120,7 @@ describe "Helper Class", ->
       , false
       helper.triggerEvent(el, eventName, true, false)
 
-      expect(@event.type).to.equal(eventName)
+      expect(@event.type).to.be(eventName)
       expect(@event.bubbles).to.be.true
       expect(@event.cancelable).to.be.false
       expect(@event.data).to.be.a("undefined")
@@ -138,12 +140,12 @@ describe "Helper Class", ->
         name: "山田太郎"
         hasYaruki: null
 
-      expect(@event.type).to.equal(eventName)
+      expect(@event.type).to.be(eventName)
       expect(@event.bubbles).to.be.true
       expect(@event.cancelable).to.be.false
 
-      expect(@event.id).to.equal(300)
-      expect(@event.name).to.equal("山田太郎")
+      expect(@event.id).to.be(300)
+      expect(@event.name).to.be("山田太郎")
       expect(@event.hasYaruki).to.be.null
 
       expect(firedFlag).to.be.true
@@ -157,7 +159,7 @@ describe "Helper Class", ->
         @event    = event
         firedFlag = true
       , false
-      (expect -> helper.triggerEvent("el", eventName, true, false)).to.throw(Error) 
+      (expect -> helper.triggerEvent("el", eventName, true, false)).to.throwError()
 
   describe ".checkBrowser()", ->
     fn = (arg) -> helper.checkBrowser[arg]
@@ -167,10 +169,10 @@ describe "Helper Class", ->
 
       it "name: \"ios\" が返ってくる", ->
         expect(helper.checkBrowser().name).to.be.a("string")
-        expect(helper.checkBrowser().name).to.equal("ios")
+        expect(helper.checkBrowser().name).to.be("ios")
       it "version: 6.1 が返ってくる", ->
         expect(helper.checkBrowser().version).to.be.a("number")
-        expect(helper.checkBrowser().version).to.equal(6.1)
+        expect(helper.checkBrowser().version).to.be(6.1)
       it "特にレガシーなわけでもないので isLegacy: false が返ってくる", ->
         expect(helper.checkBrowser().isLegacy).to.be.false
 
@@ -180,10 +182,10 @@ describe "Helper Class", ->
 
       it "name: \"android\" が返ってくる", ->
         expect(helper.checkBrowser().name).to.be.a("string")
-        expect(helper.checkBrowser().name).to.equal("android")
+        expect(helper.checkBrowser().name).to.be("android")
       it "version: 4 が返ってくる", ->
         expect(helper.checkBrowser().version).to.be.a("number")
-        expect(helper.checkBrowser().version).to.equal(4)
+        expect(helper.checkBrowser().version).to.be(4)
       it "特にレガシーなわけでもないので isLegacy: false が返ってくる", ->
         expect(helper.checkBrowser().isLegacy).to.be.false
 
@@ -193,10 +195,10 @@ describe "Helper Class", ->
 
       it "name: \"android\" が返ってくる", ->
         expect(helper.checkBrowser().name).to.be.a("string")
-        expect(helper.checkBrowser().name).to.equal("android")
+        expect(helper.checkBrowser().name).to.be("android")
       it "version: 2.3 が返ってくる", ->
         expect(helper.checkBrowser().version).to.be.a("number")
-        expect(helper.checkBrowser().version).to.equal(2.3)
+        expect(helper.checkBrowser().version).to.be(2.3)
       it "Android 2.x とかレガシーでとてもク◯ソなので isLegacy: true が返ってくる", ->
         expect(helper.checkBrowser().isLegacy).to.be.true
 
@@ -223,19 +225,19 @@ describe "Helper Class", ->
     if hasTouch
       context "タッチイベント持っていますね", ->
         it "なもんで start: \"touchstart\" が返ってくる", ->
-          expect(fn.start).to.equal("touchstart")
+          expect(fn.start).to.be("touchstart")
         it "なもんで move: \"touchmove\" が返ってくる", ->
-          expect(helper.checkTouchEvents().move).to.equal("touchmove")
+          expect(helper.checkTouchEvents().move).to.be("touchmove")
         it "なもんで end: \"touchend\" が返ってくる", ->
-          expect(fn.end).to.equal("touchend")
+          expect(fn.end).to.be("touchend")
     else
       context "タッチイベント持ってませんね", ->
         it "なもんで start: \"mousedown\" が返ってくる", ->
-          expect(fn.start).to.equal("mousedown")
+          expect(fn.start).to.be("mousedown")
         it "なもんで move: \"mousemove\" が返ってくる", ->
-          expect(fn.move).to.equal("mousemove")
+          expect(fn.move).to.be("mousemove")
         it "なもんで end: \"mouseup\" が返ってくる", ->
-          expect(fn.end).to.equal("mouseup")
+          expect(fn.end).to.be("mouseup")
       
   describe ".getWidth()", ->
     el = document.createElement("div")
@@ -251,7 +253,7 @@ describe "Helper Class", ->
 
       it "Number で 100 が返ってくる", ->
         expect(fn(el)).to.be.a("number")
-        expect(fn(el)).to.equal(100)
+        expect(fn(el)).to.be(100)
 
     context "width: 80px; padding-right: 10px; な要素だと", ->
       before ->
@@ -260,7 +262,7 @@ describe "Helper Class", ->
 
       it "幅 80 と padding の 10 足して 90 が返ってくる。", ->
         expect(fn(el)).to.be.a("number")
-        expect(fn(el)).to.equal(90)
+        expect(fn(el)).to.be(90)
 
     context "width: 80px; padding-right: 10px; -webkit-box-sizing: border-box; box-sizing: border-box; な要素を取得すると", ->
       before ->
@@ -271,7 +273,7 @@ describe "Helper Class", ->
 
       it "90 なのかなーと思いきや box-sizing: border-box; の効能で 80 が返ってくる。", ->
         expect(fn(el)).to.be.a("number")
-        expect(fn(el)).to.equal(80)
+        expect(fn(el)).to.be(80)
 
   describe ".getTransitionEndEventName()", ->
     context "Google Chrome だと", ->
@@ -280,7 +282,7 @@ describe "Helper Class", ->
 
       it "\"webkitTransitionEnd\" が返ってくる", ->
         expect(helper.getTransitionEndEventName()).to.be.a("string")
-        expect(helper.getTransitionEndEventName()).to.equal("webkitTransitionEnd")
+        expect(helper.getTransitionEndEventName()).to.be("webkitTransitionEnd")
 
     context "Firefox だと", ->
       before ->
@@ -288,7 +290,7 @@ describe "Helper Class", ->
 
       it "\"transitionend\" が返ってくる", ->
         expect(helper.getTransitionEndEventName()).to.be.a("string")
-        expect(helper.getTransitionEndEventName()).to.equal("transitionend")
+        expect(helper.getTransitionEndEventName()).to.be("transitionend")
 
     context "Opera だと", ->
       before ->
@@ -296,4 +298,4 @@ describe "Helper Class", ->
 
       it "\"oTransitionEnd\" が返ってくる", ->
         expect(helper.getTransitionEndEventName()).to.be.a("string")
-        expect(helper.getTransitionEndEventName()).to.equal("oTransitionEnd")
+        expect(helper.getTransitionEndEventName()).to.be("oTransitionEnd")

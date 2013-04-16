@@ -1,5 +1,3 @@
-expect  = chai.expect
-
 describe "Flickable Class", ->
   fl = null
 
@@ -30,14 +28,14 @@ describe "Flickable Class", ->
 
   describe "constructor", ->
     it "初期化時に対象の DOM が指定されてないとプンプン丸", ->
-      (expect -> new window.Flickable()).to.throw(Error)
+      (expect -> new window.Flickable()).to.throwError()
 
     it "String が渡されたら優しく QuerySelector してあげるおじさん", ->
       ojisan    = document.createElement("div")
       ojisan.id = "ojisan"
       sandbox.appendChild(ojisan)
 
-      (expect -> new window.Flickable("#ojisan")).to.not.throw(Error)
+      (expect -> new window.Flickable("#ojisan")).to.not.throwError()
   describe ".refresh()", ->
     it "初期化時に渡した要素の子が5つだから maxPoint 的には 4", ->
       expect(fl.maxPoint).to.equal(4)
