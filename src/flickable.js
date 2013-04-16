@@ -15,14 +15,14 @@
       this.browser = this.helper.checkBrowser();
       this.support = this.helper.checkSupport();
       this.events = this.helper.checkTouchEvents();
-      if (typeof this.el === "string") {
-        this.el = document.querySelector(this.el);
+      if (typeof element === "string") {
+        this.el = document.querySelector(element);
       } else if (!this.el) {
         throw new Error("Element Not Found");
       }
-      this.currentPoint = this.currentX = this.maxX = 0;
-      this.gestureStart = this.didCloneNode = false;
-      this.distance = this.maxPoint = this.timerId = this.scrolling = this.moveReady = this.startPageX = this.startPageY = this.basePageX = this.startTime = null;
+      this.currentPoint = this.maxPoint = this.currentX = this.maxX = 0;
+      this.gestureStart = this.moveReady = this.scrolling = this.didCloneNode = false;
+      this.startTime = this.timerId = this.basePageX = this.startPageX = this.startPageY = this.distance = null;
       this.opts.use3d = this.opts.disable3d ? false : this.support.transform3d;
       this.opts.useJsAnimate = false;
       this.opts.disableTouch = this.opts.disableTouch || false;
@@ -362,13 +362,6 @@
 
     Flickable.prototype._clearAutoPlay = function() {
       return global.clearInterval(this.timerId);
-    };
-
-    Flickable.prototype.tmpClearAutoPlay = function() {
-      var timerId;
-
-      timerId = this.timerId;
-      return global.clearInterval(timerId);
     };
 
     Flickable.prototype._setTotalWidth = function() {

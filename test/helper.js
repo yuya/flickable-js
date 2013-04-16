@@ -209,7 +209,7 @@ describe("Helper Class", function() {
     fn = function(arg) {
       return helper.checkBrowser[arg];
     };
-    describe("iOS 6.1.3 で試してみました", function() {
+    context("iOS 6.1.3 で試してみました", function() {
       spoofUserAgent("Mozilla/5.0 (iPhone; CPU iPhone OS 6_1_3 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) Mobile/10B329");
       it("name: \"ios\" が返ってくる", function() {
         expect(helper.checkBrowser().name).to.be.a("string");
@@ -223,7 +223,7 @@ describe("Helper Class", function() {
         return expect(helper.checkBrowser().isLegacy).to.be["false"];
       });
     });
-    describe("Android 4.0.2 で試してみました", function() {
+    context("Android 4.0.2 で試してみました", function() {
       before(function() {
         return spoofUserAgent("Mozilla/5.0 (Linux; U; Android 4.0.2; en-us; Galaxy Nexus Build/ICL53F) AppleWebKit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30");
       });
@@ -239,7 +239,7 @@ describe("Helper Class", function() {
         return expect(helper.checkBrowser().isLegacy).to.be["false"];
       });
     });
-    return describe("Android 2.3.6 で試してみました", function() {
+    return context("Android 2.3.6 で試してみました", function() {
       before(function() {
         return spoofUserAgent("Mozilla/5.0 (Linux; U; Android 2.3.6; en-us; Nexus S Build/GRK39F) AppleWebKit/533.1 (KHTML, like Gecko) Version/4.0 Mobile Safari/533.1");
       });
@@ -261,7 +261,7 @@ describe("Helper Class", function() {
 
     fn = helper.checkSupport();
     hasTouch = fn.touch;
-    return describe("WebKit 前提でございやんす", function() {
+    return context("WebKit 前提でございやんす", function() {
       if (hasTouch) {
         it("タッチイベントもってるから touch: true が返ってくる", function() {
           return expect(fn.touch).to.be["true"];
@@ -285,7 +285,7 @@ describe("Helper Class", function() {
     fn = helper.checkTouchEvents();
     hasTouch = helper.checkSupport().touch;
     if (hasTouch) {
-      return describe("タッチイベント持っていますね", function() {
+      return context("タッチイベント持っていますね", function() {
         it("なもんで start: \"touchstart\" が返ってくる", function() {
           return expect(fn.start).to.equal("touchstart");
         });
@@ -297,7 +297,7 @@ describe("Helper Class", function() {
         });
       });
     } else {
-      return describe("タッチイベント持ってませんね", function() {
+      return context("タッチイベント持ってませんね", function() {
         it("なもんで start: \"mousedown\" が返ってくる", function() {
           return expect(fn.start).to.equal("mousedown");
         });
@@ -321,7 +321,7 @@ describe("Helper Class", function() {
       el.style = "";
       return done();
     });
-    describe("width: 100px; な要素の幅を取得すると", function() {
+    context("width: 100px; な要素の幅を取得すると", function() {
       before(function() {
         return el.style.width = "100px";
       });
@@ -330,7 +330,7 @@ describe("Helper Class", function() {
         return expect(fn(el)).to.equal(100);
       });
     });
-    describe("width: 80px; padding-right: 10px; な要素だと", function() {
+    context("width: 80px; padding-right: 10px; な要素だと", function() {
       before(function() {
         el.style.width = "80px";
         return el.style.paddingRight = "10px";
@@ -340,7 +340,7 @@ describe("Helper Class", function() {
         return expect(fn(el)).to.equal(90);
       });
     });
-    return describe("width: 80px; padding-right: 10px; -webkit-box-sizing: border-box; box-sizing: border-box; な要素を取得すると", function() {
+    return context("width: 80px; padding-right: 10px; -webkit-box-sizing: border-box; box-sizing: border-box; な要素を取得すると", function() {
       before(function() {
         el.style.width = "80px";
         el.style.paddingRight = "10px";
@@ -354,7 +354,7 @@ describe("Helper Class", function() {
     });
   });
   return describe(".getTransitionEndEventName()", function() {
-    describe("Google Chrome だと", function() {
+    context("Google Chrome だと", function() {
       before(function() {
         return spoofUserAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_3) AppleWebKit/537.31 (KHTML, like Gecko) Chrome/26.0.1410.65 Safari/537.31");
       });
@@ -363,7 +363,7 @@ describe("Helper Class", function() {
         return expect(helper.getTransitionEndEventName()).to.equal("webkitTransitionEnd");
       });
     });
-    describe("Firefox だと", function() {
+    context("Firefox だと", function() {
       before(function() {
         return spoofUserAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10.8; rv:19.0) Gecko/20100101 Firefox/19.0");
       });
@@ -372,7 +372,7 @@ describe("Helper Class", function() {
         return expect(helper.getTransitionEndEventName()).to.equal("transitionend");
       });
     });
-    return describe("Opera だと", function() {
+    return context("Opera だと", function() {
       before(function() {
         return spoofUserAgent("Opera/9.80 (Macintosh; Intel Mac OS X 10.8.3; U; en) Presto/2.10.289 Version/12.02 (Core 2.10.289)");
       });

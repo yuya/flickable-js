@@ -162,7 +162,7 @@ describe "Helper Class", ->
   describe ".checkBrowser()", ->
     fn = (arg) -> helper.checkBrowser[arg]
 
-    describe "iOS 6.1.3 で試してみました", ->
+    context "iOS 6.1.3 で試してみました", ->
       spoofUserAgent("Mozilla/5.0 (iPhone; CPU iPhone OS 6_1_3 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) Mobile/10B329")
 
       it "name: \"ios\" が返ってくる", ->
@@ -174,7 +174,7 @@ describe "Helper Class", ->
       it "特にレガシーなわけでもないので isLegacy: false が返ってくる", ->
         expect(helper.checkBrowser().isLegacy).to.be.false
 
-    describe "Android 4.0.2 で試してみました", ->
+    context "Android 4.0.2 で試してみました", ->
       before ->
         spoofUserAgent("Mozilla/5.0 (Linux; U; Android 4.0.2; en-us; Galaxy Nexus Build/ICL53F) AppleWebKit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30")
 
@@ -187,7 +187,7 @@ describe "Helper Class", ->
       it "特にレガシーなわけでもないので isLegacy: false が返ってくる", ->
         expect(helper.checkBrowser().isLegacy).to.be.false
 
-    describe "Android 2.3.6 で試してみました", ->
+    context "Android 2.3.6 で試してみました", ->
       before ->
         spoofUserAgent("Mozilla/5.0 (Linux; U; Android 2.3.6; en-us; Nexus S Build/GRK39F) AppleWebKit/533.1 (KHTML, like Gecko) Version/4.0 Mobile Safari/533.1")
 
@@ -204,7 +204,7 @@ describe "Helper Class", ->
     fn       = helper.checkSupport()
     hasTouch = fn.touch
 
-    describe "WebKit 前提でございやんす", ->
+    context "WebKit 前提でございやんす", ->
       if hasTouch
         it "タッチイベントもってるから touch: true が返ってくる", ->
           expect(fn.touch).to.be.true
@@ -221,7 +221,7 @@ describe "Helper Class", ->
     hasTouch = helper.checkSupport().touch
 
     if hasTouch
-      describe "タッチイベント持っていますね", ->
+      context "タッチイベント持っていますね", ->
         it "なもんで start: \"touchstart\" が返ってくる", ->
           expect(fn.start).to.equal("touchstart")
         it "なもんで move: \"touchmove\" が返ってくる", ->
@@ -229,7 +229,7 @@ describe "Helper Class", ->
         it "なもんで end: \"touchend\" が返ってくる", ->
           expect(fn.end).to.equal("touchend")
     else
-      describe "タッチイベント持ってませんね", ->
+      context "タッチイベント持ってませんね", ->
         it "なもんで start: \"mousedown\" が返ってくる", ->
           expect(fn.start).to.equal("mousedown")
         it "なもんで move: \"mousemove\" が返ってくる", ->
@@ -245,7 +245,7 @@ describe "Helper Class", ->
       el.style = ""
       done()
 
-    describe "width: 100px; な要素の幅を取得すると", ->
+    context "width: 100px; な要素の幅を取得すると", ->
       before ->
         el.style.width = "100px"
 
@@ -253,7 +253,7 @@ describe "Helper Class", ->
         expect(fn(el)).to.be.a("number")
         expect(fn(el)).to.equal(100)
 
-    describe "width: 80px; padding-right: 10px; な要素だと", ->
+    context "width: 80px; padding-right: 10px; な要素だと", ->
       before ->
         el.style.width        = "80px"
         el.style.paddingRight = "10px"
@@ -262,7 +262,7 @@ describe "Helper Class", ->
         expect(fn(el)).to.be.a("number")
         expect(fn(el)).to.equal(90)
 
-    describe "width: 80px; padding-right: 10px; -webkit-box-sizing: border-box; box-sizing: border-box; な要素を取得すると", ->
+    context "width: 80px; padding-right: 10px; -webkit-box-sizing: border-box; box-sizing: border-box; な要素を取得すると", ->
       before ->
         el.style.width           = "80px"
         el.style.paddingRight    = "10px"
@@ -274,7 +274,7 @@ describe "Helper Class", ->
         expect(fn(el)).to.equal(80)
 
   describe ".getTransitionEndEventName()", ->
-    describe "Google Chrome だと", ->
+    context "Google Chrome だと", ->
       before ->
         spoofUserAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_3) AppleWebKit/537.31 (KHTML, like Gecko) Chrome/26.0.1410.65 Safari/537.31")
 
@@ -282,7 +282,7 @@ describe "Helper Class", ->
         expect(helper.getTransitionEndEventName()).to.be.a("string")
         expect(helper.getTransitionEndEventName()).to.equal("webkitTransitionEnd")
 
-    describe "Firefox だと", ->
+    context "Firefox だと", ->
       before ->
         spoofUserAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10.8; rv:19.0) Gecko/20100101 Firefox/19.0")
 
@@ -290,7 +290,7 @@ describe "Helper Class", ->
         expect(helper.getTransitionEndEventName()).to.be.a("string")
         expect(helper.getTransitionEndEventName()).to.equal("transitionend")
 
-    describe "Opera だと", ->
+    context "Opera だと", ->
       before ->
         spoofUserAgent("Opera/9.80 (Macintosh; Intel Mac OS X 10.8.3; U; en) Presto/2.10.289 Version/12.02 (Core 2.10.289)")
 

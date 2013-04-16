@@ -1,5 +1,4 @@
 do (global = this, document = this.document, helper = new global.Flickable.Helper()) ->
-  # helper = new global.Flickable.Helper()
 
   class Flickable
     constructor: (element, opts = {}) ->
@@ -10,19 +9,21 @@ do (global = this, document = this.document, helper = new global.Flickable.Helpe
       @support = @helper.checkSupport()
       @events  = @helper.checkTouchEvents()
 
-      if typeof @el is "string"
-        @el = document.querySelector(@el)
+      if typeof element is "string"
+        @el = document.querySelector(element)
       else if not @el
         throw new Error("Element Not Found")
+        
+
+      # Variable Params
+      @currentPoint = @maxPoint   = @currentX   = @maxX         = 0
+      @gestureStart = @moveReady  = @scrolling  = @didCloneNode = false
+
+      @startTime    = @timerId    =
+      @basePageX    = @startPageX = @startPageY = @distance     = null
 
 
       # Set Options
-      @currentPoint = @currentX = @maxX = 0
-      @gestureStart = @didCloneNode = false
-
-      @distance  = @maxPoint   = @timerId    = @scrolling =
-      @moveReady = @startPageX = @startPageY = @basePageX = @startTime = null
-
       @opts.use3d        = if @opts.disable3d then false else @support.transform3d
       @opts.useJsAnimate = false
       @opts.disableTouch = @opts.disableTouch or false
@@ -288,10 +289,6 @@ do (global = this, document = this.document, helper = new global.Flickable.Helpe
 
     _clearAutoPlay: ->
       global.clearInterval(@timerId)
-
-    tmpClearAutoPlay: ->
-      timerId = @timerId
-      global.clearInterval(timerId)
 
     _setTotalWidth: ->
       childNodes = @el.childNodes
