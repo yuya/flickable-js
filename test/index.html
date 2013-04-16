@@ -14,22 +14,9 @@ body{font:20px/1.5 "Helvetica Neue",Helvetica,Arial,sans-serif;padding:60px 50px
 <script src="./lib/zepto.js"></script>
 <script src="./lib/mocha.js"></script>
 <script src="./lib/chai.js"></script>
-<script>
-mocha.setup('bdd');
-window.onload = function () {
-  if (window.mochaPhantomJS) {
-    mochaPhantomJS.run();
-  } else {
-    mocha.run();
-  }
-};
-</script>
-<!--
-<script src="../src/namespace.js"></script>
-<script src="../src/helper.js"></script>
--->
-<!-- <script src="../src/flickable.js"></script> -->
+<script src="./setup.js"></script>
 <script src="../src/flickable-all.js"></script>
+
 <script src="./helper.js"></script>
 <script src="./flickable.js"></script>
 </body>
