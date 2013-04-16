@@ -1,4 +1,4 @@
-do (global = this, document = this.document, helper = new global.Flickable.Helper()) ->
+do (global = this, document = this.document, helper = new Flickable.Helper()) ->
 
   class Flickable
     constructor: (element, opts = {}) ->
@@ -13,31 +13,29 @@ do (global = this, document = this.document, helper = new global.Flickable.Helpe
         @el = document.querySelector(element)
       else if not @el
         throw new Error("Element Not Found")
-        
-
-      # Variable Params
-      @currentPoint = @maxPoint   = @currentX   = @maxX         = 0
-      @gestureStart = @moveReady  = @scrolling  = @didCloneNode = false
-
-      @startTime    = @timerId    =
-      @basePageX    = @startPageX = @startPageY = @distance     = null
-
 
       # Set Options
       @opts.use3d        = if @opts.disable3d then false else @support.transform3d
       @opts.useJsAnimate = false
       @opts.disableTouch = @opts.disableTouch or false
       @opts.disable3d    = @opts.disable3d    or false
-
       @opts.autoPlay     = @opts.autoPlay     or false
       @opts.interval     = @opts.interval     or 6600
       @opts.loop         = @opts.loop         or if @opts.autoPlay then true else false
-
       @opts.transition   = @opts.transition   or {}
       @opts.transition   =
-        timingFunction: @opts.transition["timingFunction"] or "cubic-bezier(0.23, 1, 0.32, 1)"
-        duration:       do =>
+        timingFunction:  @opts.transition["timingFunction"] or "cubic-bezier(0.23, 1, 0.32, 1)"
+        duration:        do =>
           @opts.transition["duration"] or if @browser.isLegacy then "200ms" else "330ms"
+
+      # Variable Params
+      @currentPoint = if @opts.currentPoint is undefined and @opts.loop then 1 else @opts.currentPoint or 0
+      @maxPoint     = @currentX   = @maxX       = 0
+      # @currentPoint = @maxPoint   = @currentX   = @maxX         = 0
+      @gestureStart = @moveReady  = @scrolling  = @didCloneNode = false
+
+      @startTime    = @timerId    =
+      @basePageX    = @startPageX = @startPageY = @distance     = null
 
       if @support.cssAnimation
         @helper.setStyle @el,
@@ -97,9 +95,9 @@ do (global = this, document = this.document, helper = new global.Flickable.Helpe
 
         return itemLength
 
-      @maxPoint = if @opts.maxPoint is undefined then getMaxPoint() else @opts.maxPoint
-      @distance = if @opts.distance is undefined then @el.scrollWidth / (@maxPoint + 1) else @opts.distance
-      @maxX     = -@distance * @maxPoint
+      @maxPoint     = if @opts.maxPoint is undefined then getMaxPoint()                     else @opts.maxPoint
+      @distance     = if @opts.distance is undefined then @el.scrollWidth / (@maxPoint + 1) else @opts.distance
+      @maxX         = -@distance * @maxPoint
 
       @moveToPoint()
 

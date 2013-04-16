@@ -1,3 +1,10 @@
+###
+  Flickable.js - based on flipsnap.js (http://pxgrid.github.com/js-flipsnap/)
+  
+  Author:  @yuya
+  Version: 0.1
+###
+
 do (root = this, factory = (global, document) ->
   NS = "Flickable"
 

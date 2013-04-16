@@ -303,9 +303,6 @@
       } else if (!this.el) {
         throw new Error("Element Not Found");
       }
-      this.currentPoint = this.currentX = this.maxX = 0;
-      this.gestureStart = this.moveReady = this.scrolling = this.didCloneNode = false;
-      this.distance = this.maxPoint = this.timerId = this.startPageX = this.startPageY = this.basePageX = this.startTime = null;
       this.opts.use3d = this.opts.disable3d ? false : this.support.transform3d;
       this.opts.useJsAnimate = false;
       this.opts.disableTouch = this.opts.disableTouch || false;
@@ -320,6 +317,10 @@
           return _this.opts.transition["duration"] || (_this.browser.isLegacy ? "200ms" : "330ms");
         })()
       };
+      this.currentPoint = this.opts.currentPoint === void 0 && this.opts.loop ? 1 : this.opts.currentPoint || 0;
+      this.maxPoint = this.currentX = this.maxX = 0;
+      this.gestureStart = this.moveReady = this.scrolling = this.didCloneNode = false;
+      this.startTime = this.timerId = this.basePageX = this.startPageX = this.startPageY = this.distance = null;
       if (this.support.cssAnimation) {
         this.helper.setStyle(this.el, {
           transitionProperty: this.helper.getCSSVal("transform"),
@@ -647,13 +648,6 @@
       return global.clearInterval(this.timerId);
     };
 
-    Flickable.prototype.tmpClearAutoPlay = function() {
-      var timerId;
-
-      timerId = this.timerId;
-      return global.clearInterval(timerId);
-    };
-
     Flickable.prototype._setTotalWidth = function() {
       var childNodes, itemAry, itemWidth, node, totalWidth, _i, _len;
 
@@ -733,4 +727,4 @@
 
   })();
   return global.Flickable = Flickable;
-})(this, this.document, new global.Flickable.Helper());
+})(this, this.document, new Flickable.Helper());

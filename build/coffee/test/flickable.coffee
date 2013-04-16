@@ -7,7 +7,7 @@ describe "Flickable Class", ->
     length = 5
 
     while length
-      item = document.createElement "div"
+      item = document.createElement("div")
       item.style.float = "left"
       item.style.width = "100px"
       element.appendChild(item)
