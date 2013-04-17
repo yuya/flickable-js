@@ -2,8 +2,11 @@
 /*
   Flickable.js - based on flipsnap.js (http://pxgrid.github.com/js-flipsnap/)
   
-  Author:  @yuya
   Version: 0.1
+  Author:  @yuya
+
+  Licensed under the MIT License:
+  http://www.opensource.org/licenses/mit-license.php
 */
 (function(root, factory) {
   if (typeof define === "function" && define.amd === "object") {
