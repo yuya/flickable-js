@@ -132,10 +132,13 @@ do (global = this, document = this.document) ->
         end:   if hasTouch then "touchend"   else "mouseup"
       }
 
+    getDeviceWidth: ->
+      global.innerWidth
+      
     # インライン属性で定義された幅の取得がザルでござる〜
     # てか 要素の幅の取得、全パターン網羅するのってエグエグなんだなぁ〜
     # あー jQuery つかいたい jQuery 最高! 天才! ジーニアス! 頭いい
-    getWidth: (element) ->
+    getElementWidth: (element) ->
       if element is undefined then throw new Error("Element Not Found")
 
       css          = global.getComputedStyle(element)

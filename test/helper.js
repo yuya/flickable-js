@@ -314,12 +314,12 @@ describe("Helper Class", function() {
       });
     }
   });
-  describe(".getWidth()", function() {
+  describe(".getElementWidth()", function() {
     var el, fn;
 
     el = document.createElement("div");
     fn = function(arg) {
-      return helper.getWidth(arg);
+      return helper.getElementWidth(arg);
     };
     beforeEach(function(done) {
       el.style = "";

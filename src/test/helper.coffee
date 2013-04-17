@@ -239,9 +239,9 @@ describe "Helper Class", ->
         it "なもんで end: \"mouseup\" が返ってくる", ->
           expect(fn.end).to.be("mouseup")
       
-  describe ".getWidth()", ->
+  describe ".getElementWidth()", ->
     el = document.createElement("div")
-    fn = (arg) -> helper.getWidth(arg)
+    fn = (arg) -> helper.getElementWidth(arg)
 
     beforeEach (done) ->
       el.style = ""

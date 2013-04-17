@@ -190,7 +190,11 @@
       };
     };
 
-    Helper.prototype.getWidth = function(element) {
+    Helper.prototype.getDeviceWidth = function() {
+      return global.innerWidth;
+    };
+
+    Helper.prototype.getElementWidth = function(element) {
       var border, boxSizingVal, css, hasBoxSizing, padding, styleParser, width;
 
       if (element === void 0) {
@@ -295,27 +299,26 @@
   var Flickable;
 
   Flickable = (function() {
-    function Flickable(element, opts) {
+    function Flickable(element, options, callback) {
       var _this = this;
 
-      if (opts == null) {
-        opts = {};
+      if (!element) {
+        throw new Error("Element Not Found");
+      } else if (element.length) {
+        element = element[0];
       }
-      this.el = element;
-      this.opts = opts;
+      this.el = typeof element === "string" ? document.querySelector(element) : element;
+      this.opts = options || {};
       this.helper = helper;
       this.browser = this.helper.checkBrowser();
       this.support = this.helper.checkSupport();
       this.events = this.helper.checkTouchEvents();
-      if (typeof element === "string") {
-        this.el = document.querySelector(element);
-      } else if (!this.el) {
-        throw new Error("Element Not Found");
-      }
       this.opts.use3d = this.opts.disable3d ? false : this.support.transform3d;
       this.opts.useJsAnimate = false;
       this.opts.disableTouch = this.opts.disableTouch || false;
       this.opts.disable3d = this.opts.disable3d || false;
+      this.opts.setWidth = this.opts.setWidth || false;
+      this.opts.flexible = this.opts.flexible || false;
       this.opts.autoPlay = this.opts.autoPlay || false;
       this.opts.interval = this.opts.interval || 6600;
       this.opts.loop = this.opts.loop || (this.opts.autoPlay ? true : false);
@@ -330,12 +333,20 @@
       this.maxPoint = this.currentX = this.maxX = 0;
       this.gestureStart = this.moveReady = this.scrolling = this.didCloneNode = false;
       this.startTime = this.timerId = this.basePageX = this.startPageX = this.startPageY = this.distance = null;
-      if (this.support.cssAnimation) {
+      if (this.support.cssAnimation && !this.browser.isLegacy) {
         this.helper.setStyle(this.el, {
           transitionProperty: this.helper.getCSSVal("transform"),
           transitionDuration: "0ms",
           transitionTimingFunction: this.opts.transition["timingFunction"],
           transform: this._getTranslate(0)
+        });
+      } else if (this.browser.isLegacy) {
+        this.helper.setStyle(this.el, {
+          position: "relative",
+          left: "0px",
+          transitionProperty: "left",
+          transitionDuration: "0ms",
+          transitionTimingFunction: this.opts.transition["timingFunction"]
         });
       } else {
         this.helper.setStyle(this.el, {
@@ -364,6 +375,11 @@
       if (this.opts.loop) {
         this._cloneNode();
       }
+      if (callback && typeof callback !== "function") {
+        throw new TypeError("Must be a Function");
+      } else if (callback) {
+        callback();
+      }
       this.refresh();
     }
 
@@ -384,7 +400,11 @@
       var getMaxPoint,
         _this = this;
 
-      this._setTotalWidth();
+      if (this.opts.flexible) {
+        this._setTotalWidth(this.helper.getDeviceWidth());
+      } else if (this.opts.setWidth) {
+        this._setTotalWidth();
+      }
       getMaxPoint = function() {
         var childNodes, i, itemLength, node, _i, _len;
 
@@ -465,10 +485,10 @@
         return this.helper.setStyle(this.el, {
           transform: this._getTranslate(x)
         });
-      } else if (this.opts.useJsAnimate) {
-        return this._jsAnimate(x, duration);
-      } else {
+      } else if (this.browser.isLegacy || !this.otps.useJsAnimate) {
         return this.el.style.left = "" + x + "px";
+      } else {
+        return this._jsAnimate(x, duration);
       }
     };
 
@@ -657,9 +677,12 @@
       return global.clearInterval(this.timerId);
     };
 
-    Flickable.prototype._setTotalWidth = function() {
+    Flickable.prototype._setTotalWidth = function(width) {
       var childNodes, itemAry, itemWidth, node, totalWidth, _i, _len;
 
+      if (typeof width !== "number") {
+        throw new TypeError("Must be a Number");
+      }
       childNodes = this.el.childNodes;
       itemAry = childNodes.length !== 0 ? [] : [this.el];
       for (_i = 0, _len = childNodes.length; _i < _len; _i++) {
@@ -668,8 +691,8 @@
           itemAry.push(node);
         }
       }
-      itemWidth = this.helper.getWidth(itemAry[0]);
-      totalWidth = itemWidth * itemAry.length;
+      itemWidth = width ? width : this.helper.getElementWidth(itemAry[0]);
+      totalWidth = itemAry.length * itemWidth;
       return this.el.style.width = "" + totalWidth + "px";
     };
 

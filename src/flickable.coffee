@@ -1,24 +1,26 @@
 do (global = this, document = this.document, helper = new Flickable.Helper()) ->
 
   class Flickable
-    constructor: (element, opts = {}) ->
-      @el      = element
-      @opts    = opts
+    constructor: (element, options, callback) ->
+      if not element
+        throw new Error("Element Not Found")
+      else if element.length
+        element = element[0]
+
+      @el      = if typeof element is "string" then document.querySelector(element) else element
+      @opts    = options or {}
       @helper  = helper
       @browser = @helper.checkBrowser()
       @support = @helper.checkSupport()
       @events  = @helper.checkTouchEvents()
-
-      if typeof element is "string"
-        @el = document.querySelector(element)
-      else if not @el
-        throw new Error("Element Not Found")
 
       # Set Options
       @opts.use3d        = if @opts.disable3d then false else @support.transform3d
       @opts.useJsAnimate = false
       @opts.disableTouch = @opts.disableTouch or false
       @opts.disable3d    = @opts.disable3d    or false
+      @opts.setWidth     = @opts.setWidth     or false
+      @opts.flexible     = @opts.flexible     or false
       @opts.autoPlay     = @opts.autoPlay     or false
       @opts.interval     = @opts.interval     or 6600
       @opts.loop         = @opts.loop         or if @opts.autoPlay then true else false
@@ -30,19 +32,24 @@ do (global = this, document = this.document, helper = new Flickable.Helper()) ->
 
       # Variable Params
       @currentPoint = if @opts.currentPoint is undefined and @opts.loop then 1 else @opts.currentPoint or 0
-      @maxPoint     = @currentX   = @maxX       = 0
-      # @currentPoint = @maxPoint   = @currentX   = @maxX         = 0
+      @maxPoint     = @currentX   = @maxX                       = 0
       @gestureStart = @moveReady  = @scrolling  = @didCloneNode = false
-
       @startTime    = @timerId    =
       @basePageX    = @startPageX = @startPageY = @distance     = null
 
-      if @support.cssAnimation
+      if @support.cssAnimation and not @browser.isLegacy
         @helper.setStyle @el,
           transitionProperty:       @helper.getCSSVal("transform")
           transitionDuration:       "0ms"
           transitionTimingFunction: @opts.transition["timingFunction"]
           transform:                @_getTranslate(0)
+      else if @browser.isLegacy
+        @helper.setStyle @el,
+          position:                 "relative"
+          left:                     "0px"
+          transitionProperty:       "left"
+          transitionDuration:       "0ms"
+          transitionTimingFunction: @opts.transition["timingFunction"]
       else
         @helper.setStyle @el,
           position: "relative"
@@ -62,11 +69,16 @@ do (global = this, document = this.document, helper = new Flickable.Helper()) ->
       global.addEventListener "focus", =>
         @_startAutoPlay()
       , false
-
       @el.addEventListener(@events.start, @, false)
 
       if @opts.autoPlay then @_startAutoPlay()
       if @opts.loop     then @_cloneNode()
+
+      # 任意の callback を実行
+      if callback and typeof callback isnt "function"
+        throw new TypeError("Must be a Function")
+      else if callback
+        callback()
 
       @refresh()
 
@@ -82,7 +94,10 @@ do (global = this, document = this.document, helper = new Flickable.Helper()) ->
           @_click(event)
 
     refresh: ->
-      @_setTotalWidth()
+      if @opts.flexible
+        @_setTotalWidth(@helper.getDeviceWidth())
+      else if @opts.setWidth
+        @_setTotalWidth()
 
       getMaxPoint = =>
         childNodes = @el.childNodes
@@ -137,10 +152,10 @@ do (global = this, document = this.document, helper = new Flickable.Helper()) ->
       if @support.cssAnimation and not @browser.isLegacy
         @helper.setStyle @el,
           transform: @_getTranslate(x)
-      else if @opts.useJsAnimate
-        @_jsAnimate(x, duration)
-      else
+      else if @browser.isLegacy or not @otps.useJsAnimate
         @el.style.left = "#{x}px"
+      else
+        @_jsAnimate(x, duration)
 
     _touchStart: (event) ->
       if @opts.disableTouch or @gestureStart then return
@@ -288,15 +303,17 @@ do (global = this, document = this.document, helper = new Flickable.Helper()) ->
     _clearAutoPlay: ->
       global.clearInterval(@timerId)
 
-    _setTotalWidth: ->
+    _setTotalWidth: (width) ->
+      if typeof width isnt "number" then throw new TypeError("Must be a Number")
+
       childNodes = @el.childNodes
       itemAry    = if childNodes.length isnt 0 then [] else [@el]
 
       for node in childNodes
         if node.nodeType is 1 then itemAry.push(node)
 
-      itemWidth  = @helper.getWidth(itemAry[0])
-      totalWidth = itemWidth * itemAry.length 
+      itemWidth  = if width then width else @helper.getElementWidth(itemAry[0])
+      totalWidth = itemAry.length * itemWidth
 
       @el.style.width = "#{totalWidth}px"
 
