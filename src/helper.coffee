@@ -124,7 +124,7 @@ do (global = this, document = this.document) ->
       }
 
     checkTouchEvents: ->
-      hasTouch = @checkSupport.touch
+      hasTouch = @checkSupport().touch
 
       return {
         start: if hasTouch then "touchstart" else "mousedown"
@@ -134,7 +134,7 @@ do (global = this, document = this.document) ->
 
     getDeviceWidth: ->
       global.innerWidth
-      
+
     # インライン属性で定義された幅の取得がザルでござる〜
     # てか 要素の幅の取得、全パターン網羅するのってエグエグなんだなぁ〜
     # あー jQuery つかいたい jQuery 最高! 天才! ジーニアス! 頭いい

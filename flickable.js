@@ -182,7 +182,7 @@
     Helper.prototype.checkTouchEvents = function() {
       var hasTouch;
 
-      hasTouch = this.checkSupport.touch;
+      hasTouch = this.checkSupport().touch;
       return {
         start: hasTouch ? "touchstart" : "mousedown",
         move: hasTouch ? "touchmove" : "mousemove",
@@ -370,7 +370,7 @@
         return _this._startAutoPlay();
       }, false);
       if (this.opts.fitWidth) {
-        eventName = this.browser.name ? "resize" : "orientationchange";
+        eventName = this.browser.name === "pc" ? "resize" : "orientationchange";
         global.addEventListener(eventName, function() {
           return _this.refresh();
         }, false);
