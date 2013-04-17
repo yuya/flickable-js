@@ -20,7 +20,7 @@ do (global = this, document = this.document, helper = new Flickable.Helper()) ->
       @opts.disableTouch = @opts.disableTouch or false
       @opts.disable3d    = @opts.disable3d    or false
       @opts.setWidth     = @opts.setWidth     or false
-      @opts.flexible     = @opts.flexible     or false
+      @opts.fitWidth     = @opts.fitWidth     or false
       @opts.autoPlay     = @opts.autoPlay     or false
       @opts.interval     = @opts.interval     or 6600
       @opts.loop         = @opts.loop         or if @opts.autoPlay then true else false
@@ -94,7 +94,7 @@ do (global = this, document = this.document, helper = new Flickable.Helper()) ->
           @_click(event)
 
     refresh: ->
-      if @opts.flexible
+      if @opts.fitWidth
         @_setTotalWidth(@helper.getDeviceWidth())
       else if @opts.setWidth
         @_setTotalWidth()

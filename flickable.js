@@ -318,7 +318,7 @@
       this.opts.disableTouch = this.opts.disableTouch || false;
       this.opts.disable3d = this.opts.disable3d || false;
       this.opts.setWidth = this.opts.setWidth || false;
-      this.opts.flexible = this.opts.flexible || false;
+      this.opts.fitWidth = this.opts.fitWidth || false;
       this.opts.autoPlay = this.opts.autoPlay || false;
       this.opts.interval = this.opts.interval || 6600;
       this.opts.loop = this.opts.loop || (this.opts.autoPlay ? true : false);
@@ -400,7 +400,7 @@
       var getMaxPoint,
         _this = this;
 
-      if (this.opts.flexible) {
+      if (this.opts.fitWidth) {
         this._setTotalWidth(this.helper.getDeviceWidth());
       } else if (this.opts.setWidth) {
         this._setTotalWidth();
