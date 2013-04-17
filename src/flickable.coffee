@@ -69,6 +69,13 @@ do (global = this, document = this.document, helper = new Flickable.Helper()) ->
       global.addEventListener "focus", =>
         @_startAutoPlay()
       , false
+
+      if @opts.fitWidth
+        eventName = if @browser.name is "pc" then "resize" else "orientationchange" 
+        global.addEventListener eventName, =>
+          @refresh()
+        , false
+
       @el.addEventListener(@events.start, @, false)
 
       if @opts.autoPlay then @_startAutoPlay()

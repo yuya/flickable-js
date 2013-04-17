@@ -300,7 +300,8 @@
 
   Flickable = (function() {
     function Flickable(element, options, callback) {
-      var _this = this;
+      var eventName,
+        _this = this;
 
       if (!element) {
         throw new Error("Element Not Found");
@@ -368,6 +369,12 @@
       global.addEventListener("focus", function() {
         return _this._startAutoPlay();
       }, false);
+      if (this.opts.fitWidth) {
+        eventName = this.browser.name ? "resize" : "orientationchange";
+        global.addEventListener(eventName, function() {
+          return _this.refresh();
+        }, false);
+      }
       this.el.addEventListener(this.events.start, this, false);
       if (this.opts.autoPlay) {
         this._startAutoPlay();
