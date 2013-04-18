@@ -63,12 +63,14 @@ do (global = this, document = this.document, helper = new Flickable.Helper()) ->
           @gestureStart = false
         , false
 
-      global.addEventListener "blur",  =>
-        @_clearAutoPlay()
-      , false
-      global.addEventListener "focus", =>
+      if @opts.autoPlay
         @_startAutoPlay()
-      , false
+        global.addEventListener "blur",  =>
+          @_clearAutoPlay()
+        , false
+        global.addEventListener "focus", =>
+          @_startAutoPlay()
+        , false
 
       if @opts.fitWidth
         eventName = if @browser.name is "pc" then "resize" else "orientationchange" 
@@ -78,8 +80,7 @@ do (global = this, document = this.document, helper = new Flickable.Helper()) ->
 
       @el.addEventListener(@events.start, @, false)
 
-      if @opts.autoPlay then @_startAutoPlay()
-      if @opts.loop     then @_cloneNode()
+      if @opts.loop then @_cloneNode()
 
       # 任意の callback を実行
       if callback and typeof callback isnt "function"
@@ -367,6 +368,15 @@ do (global = this, document = this.document, helper = new Flickable.Helper()) ->
       , 10
 
     destroy: ->
+      if @opts.autoPlay
+        @_clearAutoPlay()
+        global.removeEventListener("blur",  @, false)
+        global.removeEventListener("focus", @, false)
+        
+      if @opts.fitWidth
+        eventName = if @browser.name is "pc" then "resize" else "orientationchange" 
+        global.removeEventListener(eventName, @, false)
+
       @el.removeEventListener(@events.start, @, false)
 
   global.Flickable = Flickable

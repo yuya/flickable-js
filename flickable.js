@@ -363,12 +363,15 @@
           return _this.gestureStart = false;
         }, false);
       }
-      global.addEventListener("blur", function() {
-        return _this._clearAutoPlay();
-      }, false);
-      global.addEventListener("focus", function() {
-        return _this._startAutoPlay();
-      }, false);
+      if (this.opts.autoPlay) {
+        this._startAutoPlay();
+        global.addEventListener("blur", function() {
+          return _this._clearAutoPlay();
+        }, false);
+        global.addEventListener("focus", function() {
+          return _this._startAutoPlay();
+        }, false);
+      }
       if (this.opts.fitWidth) {
         eventName = this.browser.name === "pc" ? "resize" : "orientationchange";
         global.addEventListener(eventName, function() {
@@ -376,9 +379,6 @@
         }, false);
       }
       this.el.addEventListener(this.events.start, this, false);
-      if (this.opts.autoPlay) {
-        this._startAutoPlay();
-      }
       if (this.opts.loop) {
         this._cloneNode();
       }
@@ -759,6 +759,17 @@
     };
 
     Flickable.prototype.destroy = function() {
+      var eventName;
+
+      if (this.opts.autoPlay) {
+        this._clearAutoPlay();
+        global.removeEventListener("blur", this, false);
+        global.removeEventListener("focus", this, false);
+      }
+      if (this.opts.fitWidth) {
+        eventName = this.browser.name === "pc" ? "resize" : "orientationchange";
+        global.removeEventListener(eventName, this, false);
+      }
       return this.el.removeEventListener(this.events.start, this, false);
     };
 
