@@ -759,16 +759,8 @@
     };
 
     Flickable.prototype.destroy = function() {
-      var eventName;
-
       if (this.opts.autoPlay) {
         this._clearAutoPlay();
-        global.removeEventListener("blur", this, false);
-        global.removeEventListener("focus", this, false);
-      }
-      if (this.opts.fitWidth) {
-        eventName = this.browser.name === "pc" ? "resize" : "orientationchange";
-        global.removeEventListener(eventName, this, false);
       }
       return this.el.removeEventListener(this.events.start, this, false);
     };

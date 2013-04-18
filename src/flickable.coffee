@@ -370,12 +370,6 @@ do (global = this, document = this.document, helper = new Flickable.Helper()) ->
     destroy: ->
       if @opts.autoPlay
         @_clearAutoPlay()
-        global.removeEventListener("blur",  @, false)
-        global.removeEventListener("focus", @, false)
-        
-      if @opts.fitWidth
-        eventName = if @browser.name is "pc" then "resize" else "orientationchange" 
-        global.removeEventListener(eventName, @, false)
 
       @el.removeEventListener(@events.start, @, false)
 
