@@ -687,7 +687,7 @@
     Flickable.prototype._setTotalWidth = function(width) {
       var childNodes, itemAry, itemWidth, node, totalWidth, _i, _len;
 
-      if (typeof width !== "number") {
+      if (width && typeof width !== "number") {
         throw new TypeError("Must be a Number");
       }
       childNodes = this.el.childNodes;

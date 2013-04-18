@@ -312,7 +312,7 @@ do (global = this, document = this.document, helper = new Flickable.Helper()) ->
       global.clearInterval(@timerId)
 
     _setTotalWidth: (width) ->
-      if typeof width isnt "number" then throw new TypeError("Must be a Number")
+      if width and typeof width isnt "number" then throw new TypeError("Must be a Number")
 
       childNodes = @el.childNodes
       itemAry    = if childNodes.length isnt 0 then [] else [@el]
