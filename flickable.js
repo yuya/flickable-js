@@ -512,7 +512,7 @@
       }
       this.el.addEventListener(this.events.move, this, false);
       document.addEventListener(this.events.end, this, false);
-      if (!this.events.touch) {
+      if (!this.support.touch) {
         event.preventDefault();
       }
       if (this.support.cssAnimation) {

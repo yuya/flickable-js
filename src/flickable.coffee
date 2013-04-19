@@ -177,7 +177,7 @@ do (global = this, document = this.document, helper = new Flickable.Helper()) ->
       @el.addEventListener(@events.move,     @, false)
       document.addEventListener(@events.end, @, false)
 
-      if not @events.touch then event.preventDefault()
+      if not @support.touch then event.preventDefault()
 
       if @support.cssAnimation
         @helper.setStyle @el,
