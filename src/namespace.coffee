@@ -1,5 +1,5 @@
 ###
-  Flickable 0.1.1 (https://github.com/yhmt/flickable-js)
+  Flickable 0.1.2 (https://github.com/yhmt/flickable-js)
   Copyright (c) 2013 @yuya
   Licensed under the MIT License: http://www.opensource.org/licenses/mit-license.php
 ###

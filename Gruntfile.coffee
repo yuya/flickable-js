@@ -27,7 +27,7 @@ module.exports = (grunt) ->
         src:  "flickable.js"
         dest: "flickable.min.js"
       options:
-        banner: "// Flickable.js 0.1.1 Copyright (c) 2013 @yuya\n" +
+        banner: "// Flickable.js 0.1.2 Copyright (c) 2013 @yuya\n" +
                 "// See https://github.com/yhmt/flickable-js\n"
     watch:
       src:
