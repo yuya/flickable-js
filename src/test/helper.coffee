@@ -1,12 +1,12 @@
-element = document.createElement "div"
-
-element.style.width  = "100px"
-element.style.height = "100px"
-
-flickable = new window.Flickable element, {}
-helper    = flickable.helper
-
 describe "Helper Class", ->
+  element = document.createElement "div"
+
+  element.style.width  = "100px"
+  element.style.height = "100px"
+
+  flickable = new window.Flickable element, {}
+  helper    = flickable.helper
+
   # UserAgent を偽装するヘルパ
   spoofUserAgent = (ua) ->
     _navigator = window.navigator

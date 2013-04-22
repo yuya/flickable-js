@@ -1,4 +1,3 @@
-# do (global = this, document = this.document, helper = new Flickable.Helper()) ->
 do (global = this, document = this.document) ->
 
   Helper = global.Flickable.Helper

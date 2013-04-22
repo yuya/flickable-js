@@ -1,6 +1,9 @@
 module.exports = (grunt) ->
   grunt.initConfig
     pkg: grunt.file.readJSON "package.json"
+    exec:
+      mocha:
+        cmd: -> "mocha-phantomjs test/index.html"
     coffee:
       src:
         options:
@@ -50,14 +53,15 @@ module.exports = (grunt) ->
         dojo:    true
         devel:   true
 
+  grunt.loadNpmTasks "grunt-exec"
   grunt.loadNpmTasks "grunt-contrib-coffee"
   grunt.loadNpmTasks "grunt-contrib-uglify"
   grunt.loadNpmTasks "grunt-contrib-jshint"
   grunt.loadNpmTasks "grunt-contrib-watch"
   grunt.loadNpmTasks "grunt-notify"
 
-  grunt.registerTask "compile", ["coffee:src",  "jshint:src"]
-  # grunt.registerTask "test",    ["coffee:test", "jshint:test"]
-  grunt.registerTask "test",    ["coffee:test"]
+  grunt.registerTask "compile", ["coffee:src", "jshint:src"]
+  grunt.registerTask "test",    ["coffee:test", "exec:mocha"]
+  grunt.registerTask "prod",    ["compile", "test", "uglify"]
 
-  grunt.registerTask "default", ["compile",     "uglify"]
+  grunt.registerTask "default", ["prod"]

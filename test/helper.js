@@ -1,19 +1,13 @@
-var element, flickable, helper,
-  __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
-
-element = document.createElement("div");
-
-element.style.width = "100px";
-
-element.style.height = "100px";
-
-flickable = new window.Flickable(element, {});
-
-helper = flickable.helper;
+var __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
 describe("Helper Class", function() {
-  var spoofUserAgent;
+  var element, flickable, helper, spoofUserAgent;
 
+  element = document.createElement("div");
+  element.style.width = "100px";
+  element.style.height = "100px";
+  flickable = new window.Flickable(element, {});
+  helper = flickable.helper;
   spoofUserAgent = function(ua) {
     var _navigator;
 
