@@ -14,14 +14,10 @@ module.exports = (grunt) ->
           ]
       test:
         options:
-          join: false
           bare: true
         files:
-          "flickable.js": [
-            "src/namespace.coffee"
-            "src/helper.coffee"
-            "src/flickable.coffee"
-          ]
+          "test/helper.js":    "src/test/helper.coffee"
+          "test/flickable.js": "src/test/flickable.coffee"
     uglify:
       build:
         src:  "flickable.js"
@@ -60,6 +56,7 @@ module.exports = (grunt) ->
   grunt.loadNpmTasks "grunt-notify"
 
   grunt.registerTask "compile", ["coffee:src",  "jshint:src"]
-  grunt.registerTask "test",    ["coffee:test", "jshint:test"]
+  # grunt.registerTask "test",    ["coffee:test", "jshint:test"]
+  grunt.registerTask "test",    ["coffee:test"]
 
   grunt.registerTask "default", ["compile",     "uglify"]
