@@ -39,8 +39,6 @@ module.exports = (grunt) ->
     jshint:
       src:  ["flickable.js"]
       test: ["test/*.js"]
-      globals:
-        "NS": false
       options:
         curly:   true
         eqeqeq:  true
