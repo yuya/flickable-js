@@ -95,7 +95,7 @@ describe "Flickable Class", ->
       # sandbox = document.getElementById("sandbox")
 
       # initElement(el)
-      # fl = new window.Flickable el, 
+      # fl = new window.Flickable el,
       #   loop: true
       #   disableTouch: true
 

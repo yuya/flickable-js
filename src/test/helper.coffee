@@ -61,9 +61,9 @@ describe "Helper Class", ->
 
     it ("display: none; を追加したから style=\"diplay: none;\" ってなってるはず"), ->
       helper.setStyle(el,
-        display: "block"
+        display: "none"
       )
-      expect(el.getAttribute("style")).to.be("display: block; ")
+      expect(el.getAttribute("style")).to.be("display: none; ")
     it ("プロパティ複数指定したら、指定した順番に style 属性に入ってるはず"), ->
       helper.setStyle(el,
         display: "none"

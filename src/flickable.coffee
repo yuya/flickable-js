@@ -7,7 +7,7 @@ do (global = this, document = this.document) ->
     constructor: (element, options, callback) ->
       if not element
         throw new Error("Element Not Found")
-      else if element.length
+      else if typeof element is "object" and element.length
         element = element[0]
 
       @el      = if typeof element is "string" then document.querySelector(element) else element
@@ -22,7 +22,7 @@ do (global = this, document = this.document) ->
       @opts.useJsAnimate = false
       @opts.disableTouch = @opts.disableTouch or false
       @opts.disable3d    = @opts.disable3d    or false
-      @opts.setWidth     = @opts.setWidth     or false
+      @opts.setWidth     = @opts.setWidth     or true
       @opts.fitWidth     = @opts.fitWidth     or false
       @opts.autoPlay     = @opts.autoPlay     or false
       @opts.interval     = @opts.interval     or 6600

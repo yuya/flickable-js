@@ -48,6 +48,7 @@ module.exports = (grunt) ->
         eqnull:  true
         es5:     true
         dojo:    true
+        devel:   true
 
   grunt.loadNpmTasks "grunt-contrib-coffee"
   grunt.loadNpmTasks "grunt-contrib-uglify"

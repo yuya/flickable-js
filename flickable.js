@@ -261,7 +261,7 @@
     };
 
     Helper.prototype.getTransitionEndEventName = function() {
-      var browser, match, transitionEndName, ua, version;
+      var browser, match, ua, version;
 
       ua = global.navigator.userAgent.toLowerCase();
       match = /(webkit)[ \/]([\w.]+)/.exec(ua) || /(firefox)[ \/]([\w.]+)/.exec(ua) || /(msie) ([\w.]+)/.exec(ua) || /(opera)(?:.*version|)[ \/]([\w.]+)/.exec(ua) || [];
@@ -272,17 +272,14 @@
       }
       switch (browser) {
         case "webkit":
-          transitionEndName = "webkitTransitionEnd";
-          break;
+          return "webkitTransitionEnd";
         case "opera":
-          transitionEndName = "oTransitionEnd";
-          break;
+          return "oTransitionEnd";
         case "firefox":
         case "modernIE":
-          transitionEndName = "transitionend";
-          break;
+          return "transitionend";
         default:
-          transitionEndName = void 0;
+          return void 0;
       }
     };
 
@@ -303,7 +300,7 @@
 
       if (!element) {
         throw new Error("Element Not Found");
-      } else if (element.length) {
+      } else if (typeof element === "object" && element.length) {
         element = element[0];
       }
       this.el = typeof element === "string" ? document.querySelector(element) : element;
@@ -316,7 +313,7 @@
       this.opts.useJsAnimate = false;
       this.opts.disableTouch = this.opts.disableTouch || false;
       this.opts.disable3d = this.opts.disable3d || false;
-      this.opts.setWidth = this.opts.setWidth || false;
+      this.opts.setWidth = this.opts.setWidth || true;
       this.opts.fitWidth = this.opts.fitWidth || false;
       this.opts.autoPlay = this.opts.autoPlay || false;
       this.opts.interval = this.opts.interval || 6600;

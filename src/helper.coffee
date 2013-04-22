@@ -210,17 +210,13 @@ do (global = this, document = this.document) ->
 
       switch browser
         when "webkit"
-          transitionEndName = "webkitTransitionEnd"
-          return
+          return "webkitTransitionEnd"
         when "opera"
-          transitionEndName = "oTransitionEnd"
-          return
+          return "oTransitionEnd"
         when "firefox", "modernIE"
-          transitionEndName = "transitionend"
-          return
+          return "transitionend"
         else
-          transitionEndName = undefined
-          return
+          return undefined
 
   global.Flickable.Helper = Helper
   return

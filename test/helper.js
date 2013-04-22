@@ -81,9 +81,9 @@ describe("Helper Class", function() {
     });
     it("display: none; を追加したから style=\"diplay: none;\" ってなってるはず", function() {
       helper.setStyle(el, {
-        display: "block"
+        display: "none"
       });
-      return expect(el.getAttribute("style")).to.be("display: block; ");
+      return expect(el.getAttribute("style")).to.be("display: none; ");
     });
     it("プロパティ複数指定したら、指定した順番に style 属性に入ってるはず", function() {
       helper.setStyle(el, {
