@@ -238,7 +238,7 @@ describe "Helper Class", ->
           expect(fn.move).to.be("mousemove")
         it "なもんで end: \"mouseup\" が返ってくる", ->
           expect(fn.end).to.be("mouseup")
-      
+
   describe ".getElementWidth()", ->
     el = document.createElement("div")
     fn = (arg) -> helper.getElementWidth(arg)

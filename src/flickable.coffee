@@ -1,4 +1,7 @@
-do (global = this, document = this.document, helper = new Flickable.Helper()) ->
+# do (global = this, document = this.document, helper = new Flickable.Helper()) ->
+do (global = this, document = this.document) ->
+
+  Helper = global.Flickable.Helper
 
   class Flickable
     constructor: (element, options, callback) ->
@@ -9,7 +12,7 @@ do (global = this, document = this.document, helper = new Flickable.Helper()) ->
 
       @el      = if typeof element is "string" then document.querySelector(element) else element
       @opts    = options or {}
-      @helper  = helper
+      @helper  = new Helper()
       @browser = @helper.checkBrowser()
       @support = @helper.checkSupport()
       @events  = @helper.checkTouchEvents()
@@ -58,9 +61,11 @@ do (global = this, document = this.document, helper = new Flickable.Helper()) ->
       if @support.eventListener
         document.addEventListener "gesturestart", =>
           @gestureStart = true
+          return
         , false
         document.addEventListener "gestureend",   =>
           @gestureStart = false
+          return
         , false
 
       if @opts.autoPlay
@@ -73,7 +78,7 @@ do (global = this, document = this.document, helper = new Flickable.Helper()) ->
         , false
 
       if @opts.fitWidth
-        eventName = if @browser.name is "pc" then "resize" else "orientationchange" 
+        eventName = if @browser.name is "pc" then "resize" else "orientationchange"
         global.addEventListener eventName, =>
           @refresh()
         , false
@@ -131,12 +136,12 @@ do (global = this, document = this.document, helper = new Flickable.Helper()) ->
       @currentPoint < @maxPoint
 
     toPrev: ->
-      if not @hasPrev() then return
+      unless @hasPrev() then return
       @moveToPoint(@currentPoint - 1)
 
     toNext: ->
-      if not @hasNext() then return
-      @moveToPoint(@currentPoint + 1) 
+      unless @hasNext() then return
+      @moveToPoint(@currentPoint + 1)
 
     moveToPoint: (point = @currentPoint, duration = @opts.transition["duration"]) ->
       beforePoint   = @currentPoint
@@ -162,6 +167,7 @@ do (global = this, document = this.document, helper = new Flickable.Helper()) ->
           transform: @_getTranslate(x)
       else if @browser.isLegacy or not @otps.useJsAnimate
         @el.style.left = "#{x}px"
+        return
       else
         @_jsAnimate(x, duration)
 
@@ -177,7 +183,7 @@ do (global = this, document = this.document, helper = new Flickable.Helper()) ->
       @el.addEventListener(@events.move,     @, false)
       document.addEventListener(@events.end, @, false)
 
-      if not @support.touch then event.preventDefault()
+      unless @support.touch then event.preventDefault()
 
       if @support.cssAnimation
         @helper.setStyle @el,
@@ -198,8 +204,8 @@ do (global = this, document = this.document, helper = new Flickable.Helper()) ->
       @helper.triggerEvent(@el, "fltouchstart", true, false)
 
     _touchMove: (event) ->
-      if @opts.autoPlay then @_clearAutoPlay() 
-      if not @scrolling or @gestureStart then return
+      if @opts.autoPlay then @_clearAutoPlay()
+      unless @scrolling or @gestureStart then return
 
       pageX = @helper.getPage(event, "pageX")
       pageY = @helper.getPage(event, "pageY")
@@ -219,7 +225,7 @@ do (global = this, document = this.document, helper = new Flickable.Helper()) ->
           direction: @directionX
 
         if isPrevent
-          @_touchAfter 
+          @_touchAfter
             moved:         false
             originalPoint: @currentPoint
             newPoint:      @currentPoint
@@ -240,13 +246,13 @@ do (global = this, document = this.document, helper = new Flickable.Helper()) ->
           @scrolling = false
 
       @basePageX = pageX
-      if @opts.autoPlay then @_startAutoPlay()       
+      if @opts.autoPlay then @_startAutoPlay()
 
     _touchEnd: (event) ->
       @el.removeEventListener(@events.move, @, false)
       document.removeEventListener(@events.end, @, false)
 
-      if not @scrolling then return
+      unless @scrolling then return
 
       newPoint = do =>
         point = -@currentX / @distance
@@ -286,7 +292,7 @@ do (global = this, document = this.document, helper = new Flickable.Helper()) ->
       childNodes = @el.childNodes
       itemAry    = []
 
-      if not @opts.loop or @didCloneNode then return
+      unless @opts.loop or @didCloneNode then return
 
       for node in childNodes
         if node.nodeType is 1 then itemAry.push(node)
@@ -298,15 +304,17 @@ do (global = this, document = this.document, helper = new Flickable.Helper()) ->
       @el.appendChild(firstItem.cloneNode(true))
 
       @didCloneNode = true
+      return
 
     _startAutoPlay: ->
-      if not @opts.autoPlay then return
+      unless @opts.autoPlay then return
 
       toNextFn = => @toNext()
       interval = @opts.interval
 
       do =>
         @timerId = global.setInterval(toNextFn, interval)
+        return
 
     _clearAutoPlay: ->
       global.clearInterval(@timerId)
@@ -324,6 +332,7 @@ do (global = this, document = this.document, helper = new Flickable.Helper()) ->
       totalWidth = itemAry.length * itemWidth
 
       @el.style.width = "#{totalWidth}px"
+      return
 
     # 毎回コストかかってる感じなのでチューニングしたい
     _loop: ->
@@ -347,11 +356,11 @@ do (global = this, document = this.document, helper = new Flickable.Helper()) ->
           smartLoop()
         , clearTime
 
-    _jsAnimate: (x, duration = @opts.transition["duration"]) ->
+    _jsAnimate: (x, duration) ->
       begin    = +new Date()
       from     = parseInt(@el.style.left, 10)
       to       = x
-      duration = parseInt(duration, 10)
+      duration = parseInt(duration, 10) or @opts.transition["duration"]
       easing   = (time, duration) ->
         -(time /= duration) * (time - 2)
       timer    = global.setInterval ->
@@ -365,7 +374,10 @@ do (global = this, document = this.document, helper = new Flickable.Helper()) ->
           now = pos * (to - from) + from
 
         @el.style.left = "#{now}px"
+        return
       , 10
+
+      return
 
     destroy: ->
       if @opts.autoPlay
@@ -374,3 +386,4 @@ do (global = this, document = this.document, helper = new Flickable.Helper()) ->
       @el.removeEventListener(@events.start, @, false)
 
   global.Flickable = Flickable
+  return

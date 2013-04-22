@@ -25,9 +25,11 @@ do (global = this, document = this.document) ->
       _setAttr = (style, prop, val) =>
         if hasSaveProp
           style[hasSaveProp] = val
+          return
         else if style[prop] isnt undefined
           @saveProp[prop] = prop
           style[prop]     = val
+          return
         else
           for prefix in @prefixes
             _prop = @ucFirst(prefix) + @ucFirst(prop)
@@ -142,7 +144,7 @@ do (global = this, document = this.document) ->
       if element is undefined then throw new Error("Element Not Found")
 
       css          = global.getComputedStyle(element)
-      boxSizingVal = undefined 
+      boxSizingVal = undefined
       hasBoxSizing = do ->
         properties = [
           "-webkit-box-sizing"
@@ -176,6 +178,7 @@ do (global = this, document = this.document) ->
         border  = styleParser(["border-right-width", "border-left-width"])
         padding = styleParser(["padding-right",      "padding-left"])
         width   = element.scrollWidth + border + padding;
+        return width
       # else if hasBoxSizing and boxSizingVal is "border-box" or not hasBoxSizing
       else if element.scrollWidth is 0
         width = parseFloat(element.style.width.match(/\d+/), 10)
@@ -187,6 +190,7 @@ do (global = this, document = this.document) ->
         return width
       else
         width = element.scrollWidth
+        return width
 
     getTranslate: (use3d = true, x, y = 0, z = 0) ->
       if @opts.use3d then "translate3d(#{x}px, 0, 0)" else "translate(#{x}px, 0)"
@@ -204,14 +208,19 @@ do (global = this, document = this.document) ->
 
       if browser is "msie" and version >= 10 then browser = "modernIE"
 
-      switch browser 
+      switch browser
         when "webkit"
           transitionEndName = "webkitTransitionEnd"
+          return
         when "opera"
           transitionEndName = "oTransitionEnd"
+          return
         when "firefox", "modernIE"
           transitionEndName = "transitionend"
+          return
         else
           transitionEndName = undefined
+          return
 
   global.Flickable.Helper = Helper
+  return
