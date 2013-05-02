@@ -4,8 +4,8 @@
   Licensed under the MIT License: http://www.opensource.org/licenses/mit-license.php
 ###
 
-do (root = this, factory = (global, document) ->
-  global["Flickable"] = {}
+do (root = this, factory = (window, document) ->
+  window["Flickable"] = {}
   return
 ) ->
   # AMD

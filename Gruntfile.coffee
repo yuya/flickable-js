@@ -8,7 +8,7 @@ module.exports = (grunt) ->
       src:
         options:
           join: true
-          bare: true
+          # bare: true
         files:
           "flickable.js": [
             "src/namespace.coffee"
@@ -52,6 +52,7 @@ module.exports = (grunt) ->
         es5:     true
         dojo:    true
         devel:   true
+        browser: true
 
   grunt.loadNpmTasks "grunt-exec"
   grunt.loadNpmTasks "grunt-contrib-coffee"

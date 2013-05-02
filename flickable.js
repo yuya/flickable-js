@@ -3,21 +3,23 @@
   Copyright (c) 2013 @yuya
   Licensed under the MIT License: http://www.opensource.org/licenses/mit-license.php
 */
-(function(root, factory) {
-  if (typeof define === "function" && define.amd === "object") {
-    return define("Flickable", [], function() {
-      factory(root, root.document);
-      return root["Flickable"];
-    });
-  } else {
-    return factory(root, root.document);
-  }
-})(this, function(global, document) {
-  global["Flickable"] = {};
-});
 
-(function(global, document) {
-  var Helper;
+
+(function() {
+  var Flickable, Helper;
+
+  (function(root, factory) {
+    if (typeof define === "function" && define.amd === "object") {
+      return define("Flickable", [], function() {
+        factory(root, root.document);
+        return root["Flickable"];
+      });
+    } else {
+      return factory(root, root.document);
+    }
+  })(this, function(window, document) {
+    window["Flickable"] = {};
+  });
 
   Helper = (function() {
     function Helper() {
@@ -138,7 +140,7 @@
     Helper.prototype.checkBrowser = function() {
       var android, browserName, browserVersion, ios, ua;
 
-      ua = global.navigator.userAgent.toLowerCase();
+      ua = window.navigator.userAgent.toLowerCase();
       ios = ua.match(/(?:iphone\sos|ip[oa]d.*os)\s([\d_]+)/);
       android = ua.match(/(android)\s+([\d.]+)/);
       browserName = !!ios ? "ios" : !!android ? "android" : "pc";
@@ -162,8 +164,8 @@
       hasTransform = this.hasProp(["transformProperty", "WebkitTransform", "MozTransform", "msTransform", "OTransform"]);
       hasTransition = this.hasProp(["transitionProperty", "WebkitTransitionProperty", "MozTransitionProperty", "msTransitionProperty", "OTransitionProperty"]);
       return {
-        touch: "ontouchstart" in global,
-        eventListener: "addEventListener" in global,
+        touch: "ontouchstart" in window,
+        eventListener: "addEventListener" in window,
         transform3d: hasTransform3d,
         transform: hasTransform,
         transition: hasTransition,
@@ -183,7 +185,7 @@
     };
 
     Helper.prototype.getDeviceWidth = function() {
-      return global.innerWidth;
+      return window.innerWidth;
     };
 
     Helper.prototype.getElementWidth = function(element) {
@@ -192,7 +194,7 @@
       if (element === void 0) {
         throw new Error("Element Not Found");
       }
-      css = global.getComputedStyle(element);
+      css = window.getComputedStyle(element);
       boxSizingVal = void 0;
       hasBoxSizing = (function() {
         var prop, properties, _i, _len;
@@ -263,7 +265,7 @@
     Helper.prototype.getTransitionEndEventName = function() {
       var browser, match, ua, version;
 
-      ua = global.navigator.userAgent.toLowerCase();
+      ua = window.navigator.userAgent.toLowerCase();
       match = /(webkit)[ \/]([\w.]+)/.exec(ua) || /(firefox)[ \/]([\w.]+)/.exec(ua) || /(msie) ([\w.]+)/.exec(ua) || /(opera)(?:.*version|)[ \/]([\w.]+)/.exec(ua) || [];
       browser = match[1];
       version = parseFloat(match[2], 10);
@@ -286,13 +288,11 @@
     return Helper;
 
   })();
-  global.Flickable.Helper = Helper;
-})(this, this.document);
 
-(function(global, document) {
-  var Flickable, Helper;
+  window.Flickable.Helper = Helper;
 
-  Helper = global.Flickable.Helper;
+  Helper = window.Flickable.Helper;
+
   Flickable = (function() {
     function Flickable(element, options, callback) {
       var eventName,
@@ -360,16 +360,16 @@
       }
       if (this.opts.autoPlay) {
         this._startAutoPlay();
-        global.addEventListener("blur", function() {
+        window.addEventListener("blur", function() {
           return _this._clearAutoPlay();
         }, false);
-        global.addEventListener("focus", function() {
+        window.addEventListener("focus", function() {
           return _this._startAutoPlay();
         }, false);
       }
       if (this.opts.fitWidth) {
         eventName = this.browser.name === "pc" ? "resize" : "orientationchange";
-        global.addEventListener(eventName, function() {
+        window.addEventListener(eventName, function() {
           return _this.refresh();
         }, false);
       }
@@ -619,7 +619,7 @@
 
       this.scrolling = false;
       this.moveReady = false;
-      global.setTimeout(function() {
+      window.setTimeout(function() {
         return _this.el.removeEventListener("click", _this, true);
       }, 200);
       return this.helper.triggerEvent(this.el, "fltouchend", true, false, params);
@@ -671,12 +671,12 @@
       };
       interval = this.opts.interval;
       return (function() {
-        _this.timerId = global.setInterval(toNextFn, interval);
+        _this.timerId = window.setInterval(toNextFn, interval);
       })();
     };
 
     Flickable.prototype._clearAutoPlay = function() {
-      return global.clearInterval(this.timerId);
+      return window.clearInterval(this.timerId);
     };
 
     Flickable.prototype._setTotalWidth = function(width) {
@@ -714,12 +714,12 @@
       transitionEndEventName = this.helper.getTransitionEndEventName();
       if (transitionEndEventName !== void 0) {
         this.el.addEventListener(transitionEndEventName, smartLoop, false);
-        return global.setTimeout(function() {
+        return window.setTimeout(function() {
           return _this.el.removeEventListener(transitionEndEventName, smartLoop, false);
         }, clearTime);
       } else {
         timerId = smartLoop;
-        return global.clearTimeout(function() {
+        return window.clearTimeout(function() {
           return smartLoop();
         }, clearTime);
       }
@@ -735,12 +735,12 @@
       easing = function(time, duration) {
         return -(time /= duration) * (time - 2);
       };
-      timer = global.setInterval(function() {
+      timer = window.setInterval(function() {
         var now, pos, time;
 
         time = new Date() - begin;
         if (time > duration) {
-          global.clearInterval(timer);
+          window.clearInterval(timer);
           now = to;
         } else {
           pos = easing(time, duration);
@@ -760,5 +760,7 @@
     return Flickable;
 
   })();
-  global.Flickable = Flickable;
-})(this, this.document);
+
+  window.Flickable = Flickable;
+
+}).call(this);
