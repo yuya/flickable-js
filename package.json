@@ -1,7 +1,10 @@
 {
-  "name": "flickable-js",
-  "version": "0.0.1",
+  "name": "flickable",
+  "title": "Flickable.js",
+  "version": "0.1.2",
+  "author": "@yuya",
   "description": "",
+  "url": "https://github.com/yhmt/flickable-js",
   "main": "flickable.js",
   "directories": {
     "test": "test"
