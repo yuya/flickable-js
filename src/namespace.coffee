@@ -1,19 +1,11 @@
-###
-  Flickable 0.1.2 (https://github.com/yhmt/flickable-js)
-  Copyright (c) 2013 @yuya
-  Licensed under the MIT License: http://www.opensource.org/licenses/mit-license.php
-###
+root = window ? global ? this
 
-do (root = this, factory = (window, document) ->
-  window["Flickable"] = {}
-  return
-) ->
-  # AMD
-  if typeof define is "function" and define.amd is "object"
-    define("Flickable", [], ->
-      factory(root, root.document)
-      root["Flickable"]
-    )
-  # Browser global scope
-  else
-    factory(root, root.document)
+root.namespace = (namespace, fn) ->
+  klass   = fn()
+  context = root
+
+  for token in namespace.split(".")
+    context[token] ?= {}
+    context = context[token]
+
+  context[klass.name] = klass

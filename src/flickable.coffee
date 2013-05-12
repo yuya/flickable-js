@@ -1,6 +1,7 @@
-Helper = window.Flickable.Helper
+namespace "Flickable", -> class Core
 
-class Flickable
+  helper = new Flickable.Helper()
+
   constructor: (element, options, callback) ->
     if not element
       throw new Error("Element Not Found")
@@ -9,7 +10,7 @@ class Flickable
 
     @el      = if typeof element is "string" then document.querySelector(element) else element
     @opts    = options or {}
-    @helper  = new Helper()
+    @helper  = helper
     @browser = @helper.checkBrowser()
     @support = @helper.checkSupport()
     @events  = @helper.checkTouchEvents()
@@ -382,4 +383,4 @@ class Flickable
 
     @el.removeEventListener(@events.start, @, false)
 
-window.Flickable = Flickable
+window.Flickable = Flickable.Core
