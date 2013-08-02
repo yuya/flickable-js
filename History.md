@@ -1,3 +1,10 @@
+0.1.4  / 2013-08-02
+====================
+
+* update Loop Function
+* fix Grunt tasks
+* fix CoffeeScript coding style
+
 0.1.3  / 2013-05-12
 ====================
 

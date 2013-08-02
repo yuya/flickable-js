@@ -48,8 +48,8 @@ describe("Flickable Class", function() {
     });
   });
   describe(".refresh()", function() {
-    it("初期化時に渡した要素の子が5つだから maxPoint 的には 4", function() {
-      return expect(fl.maxPoint).to.equal(4);
+    it("初期化時に渡した要素の子が5つだから maxPoint は 5", function() {
+      return expect(fl.maxPoint).to.equal(5);
     });
     return it("子要素の幅が 100px だから 100 が Number で返ってくる", function() {
       return expect(fl.distance).to.equal(100);
@@ -70,8 +70,8 @@ describe("Flickable Class", function() {
       fl.moveToPoint(2);
       return expect(fl.hasNext()).to.be["true"];
     });
-    return it("5番目に移動した (moveToPoint(4)) からもう右にスワイプできません", function() {
-      fl.moveToPoint(4);
+    return it("5番目に移動した (moveToPoint(5)) からもう右にスワイプできません", function() {
+      fl.moveToPoint(5);
       return expect(fl.hasNext()).to.be["false"];
     });
   });
@@ -94,18 +94,18 @@ describe("Flickable Class", function() {
       fl.toNext();
       return expect(fl.currentPoint).to.equal(1);
     });
-    return it("currentPoint が 4 のときに toNext() しても実行されない", function() {
-      fl.moveToPoint(4);
-      expect(fl.currentPoint).to.equal(4);
+    return it("currentPoint が 5 のときに toNext() しても実行されない", function() {
+      fl.moveToPoint(5);
+      expect(fl.currentPoint).to.equal(5);
       fl.toNext();
-      return expect(fl.currentPoint).to.equal(4);
+      return expect(fl.currentPoint).to.equal(5);
     });
   });
   return describe(".moveToPoint()", function() {
     return context("loop オプション無効（デフォルト）のとき", function() {
       it("実際の小要素数より大きい値（10）を入れてもガン無視して currentPoint は 4 を返す", function() {
         fl.moveToPoint(10);
-        return expect(fl.currentPoint).to.equal(4);
+        return expect(fl.currentPoint).to.equal(5);
       });
       return it("マイナス値（-1）とか入れてもガン無視して currentPoint は 0 を返す", function() {
         fl.moveToPoint(-1);

@@ -8,36 +8,37 @@ namespace "Flickable", -> class Core
     else if typeof element is "object" and element.length
       element = element[0]
 
-    @el      = if typeof element is "string" then document.querySelector element else element
-    @opts    = options or {}
     @helper  = helper
+    @el      = if typeof element is "string" then @helper.selector element else element
+    @opts    = options or {}
     @browser = @helper.checkBrowser()
     @support = @helper.checkSupport()
     @events  = @helper.checkTouchEvents()
 
     # Set Options
-    @opts.use3d        = if @opts.disable3d then false else @support.transform3d
-    @opts.useJsAnimate = false
-    @opts.disableTouch = @opts.disableTouch or false
-    @opts.disable3d    = @opts.disable3d    or false
-    @opts.setWidth     = @opts.setWidth     or true
-    @opts.fitWidth     = @opts.fitWidth     or false
-    @opts.autoPlay     = @opts.autoPlay     or false
-    @opts.interval     = @opts.interval     or 6600
-    @opts.loop         = @opts.loop         or if @opts.autoPlay then true else false
-    @opts.transition   = @opts.transition   or {}
-    @opts.transition   =
+    @opts.use3d         = if @opts.disable3d then false else @support.transform3d
+    @opts.useJsAnimate  = false
+    @opts.disableTouch  = @opts.disableTouch  or false
+    @opts.disable3d     = @opts.disable3d     or false
+    @opts.setWidth      = @opts.setWidth      or true
+    @opts.fitWidth      = @opts.fitWidth      or false
+    @opts.autoPlay      = @opts.autoPlay      or false
+    @opts.interval      = @opts.interval      or 6600
+    @opts.clearInterval = @opts.clearInterval or @opts.interval / 2
+    @opts.loop          = @opts.loop          or if @opts.autoPlay then true else false
+    @opts.transition    = @opts.transition    or {}
+    @opts.transition    =
       timingFunction:  @opts.transition["timingFunction"] or "cubic-bezier(0.23, 1, 0.32, 1)"
       duration:        do =>
         @opts.transition["duration"] or if @browser.isLegacy then "200ms" else "330ms"
 
     # Variable Params
-    # @currentPoint = if @opts.currentPoint is undefined and @opts.loop then 1 else @opts.currentPoint or 0
-    @currentPoint = @opts.currentPoint or 0
-    @maxPoint     = @currentX   = @maxX                       = 0
-    @gestureStart = @moveReady  = @scrolling  = @didCloneNode = false
-    @startTime    = @timerId    = @basePageX  = @startPageX   =
-    @startPageY   = @distance   = @childNodes = @visibleSize  = null
+    @currentPoint      = @opts.currentPoint or 0
+    @childElementCount = @el.childElementCount
+    @maxPoint          = @currentX   = @maxX                       = 0
+    @gestureStart      = @moveReady  = @scrolling = @didCloneNode = false
+    @startTime         = @timerId    = @basePageX =
+    @startPageX        = @startPageY = @distance  = @visibleSize  = null
 
     if @support.cssAnimation and not @browser.isLegacy
       @helper.setStyle @el,
@@ -112,24 +113,14 @@ namespace "Flickable", -> class Core
       @_setTotalWidth()
 
     getMaxPoint = =>
-      ret = 0
+      itemCount = 0
+      for el in @el.childNodes
+        if el.nodeType is 1 then itemCount++
+      return itemCount
 
-      for node in @el.childNodes
-        if node.nodeType is 1 then ret++
-
-      # if @opts.loop
-      #   if @visibleNodeSize > 1 then ret
-      # else
-      if ret > 0 then ret--
-
-      return ret
-
-    @maxPoint = if @opts.maxPoint is undefined then getMaxPoint() else @opts.maxPoint
-    @distance = if @opts.distance is undefined then @el.scrollWidth / (@maxPoint + 1) else @opts.distance
+    @maxPoint = if @opts.maxPoint is undefined then getMaxPoint()               else @opts.maxPoint
+    @distance = if @opts.distance is undefined then @el.scrollWidth / @maxPoint else @opts.distance
     @maxX     = -@distance * @maxPoint
-
-    # if @opts.loop and (@visibleSize > 1)
-    #   @maxPoint = @maxPoint - @visibleSize
 
     @moveToPoint()
 
@@ -141,11 +132,11 @@ namespace "Flickable", -> class Core
 
   toPrev: ->
     unless @hasPrev() then return
-    @moveToPoint @currentPoint--
+    @moveToPoint @currentPoint - 1
 
   toNext: ->
     unless @hasNext() then return
-    @moveToPoint @currentPoint++
+    @moveToPoint @currentPoint + 1
 
   moveToPoint: (point = @currentPoint, duration = @opts.transition["duration"]) ->
     beforePoint   = @currentPoint
@@ -315,7 +306,7 @@ namespace "Flickable", -> class Core
 
     while insertedCount < @visibleSize
       i = insertedCount
-      insertNode i, @visibleSize - i
+      insertNode(i, @visibleSize - i)
       insertedCount++
 
     @currentPoint = @visibleSize
@@ -350,36 +341,14 @@ namespace "Flickable", -> class Core
     @el.style.width = "#{totalWidth}px"
     return
 
-  # 毎回コストかかってる感じなのでチューニングしたい
   _loop: ->
-    clearTime = @opts.interval / 2
-    console.log "### currnetPoint  %s", @currentPoint
-    # console.log "@@@ maxPoint      %s", @maxPoint
-    # console.log "$$$ childNodesLen %s", @childNodes.length
     smartLoop = =>
+      # も、戻るぞーって場合
+      if @currentPoint <= @visibleSize
+        @moveToPoint @currentPoint + @childElementCount, 0
       # こ、超えるぞーって場合
-      # if @currentPoint >= (@maxPoint - @visibleSize)
-      #   @moveToPoint @maxPoint - @currentPoint, 0
-      # # も、戻るぞーって場合
-      # else if @currentPoint <= @visibleSize
-      #   @moveToPoint @maxPoint - @visibleSize, 0
-
-      # if      @currentPoint is 4
-      #   @moveToPoint 12, 0
-      # else if @currentPoint is 13
-      #   @moveToPoint  5, 0
-
-      switch @currentPoint
-        when  4 then @moveToPoint 12, 0
-        when  3 then @moveToPoint 11, 0
-        when  2 then @moveToPoint 10, 0
-        when  1 then @moveToPoint  9, 0
-        when  0 then @moveToPoint  8, 0
-        when 13 then @moveToPoint  5, 0
-        when 14 then @moveToPoint  6, 0
-        when 15 then @moveToPoint  7, 0
-        when 16 then @moveToPoint  8, 0
-        when 17 then @moveToPoint  9, 0
+      else if @currentPoint >= (@maxPoint - @visibleSize)
+        @moveToPoint @currentPoint - @childElementCount, 0
 
     transitionEndEventName = @helper.getTransitionEndEventName()
 
@@ -387,12 +356,12 @@ namespace "Flickable", -> class Core
       @el.addEventListener transitionEndEventName, smartLoop, false
       setTimeout =>
         @el.removeEventListener transitionEndEventName, smartLoop, false
-      , clearTime
+      , @opts.clearInterval
     else
       timerId = smartLoop
       clearTimeout ->
         smartLoop()
-      , clearTime
+      , @opts.clearInterval
 
   _jsAnimate: (x, duration) ->
     begin    = +new Date()

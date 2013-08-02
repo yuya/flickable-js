@@ -18,6 +18,20 @@ namespace "Flickable", -> class Helper
     else
       throw new TypeError "Must be a Array or String"
 
+  selector: (element, target) ->
+    target    = target or document
+    regex     = /^(.+[\#\.\s\[\*>:,]|[\[:])/
+    formatted = element.substring 1, element.length
+
+    if regex.test element
+      target.querySelectorAll element
+    else if element[0] is "#"
+      target.getElementById formatted
+    else if element[0] is "."
+      target.getElementsByClassName formatted
+    else
+      target.getElementsByTagName element
+
   setStyle: (element, styles) ->
     style       = element.style
     hasSaveProp = @saveProp[prop]

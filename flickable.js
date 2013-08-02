@@ -1,3 +1,5 @@
+// Flickable.js 0.1.4 Copyright (c) 2013 @yuya
+// See https://github.com/yhmt/flickable-js
 (function() {
   var root, _ref;
 
@@ -56,6 +58,23 @@
           }
         } else {
           throw new TypeError("Must be a Array or String");
+        }
+      };
+
+      Helper.prototype.selector = function(element, target) {
+        var formatted, regex;
+
+        target = target || document;
+        regex = /^(.+[\#\.\s\[\*>:,]|[\[:])/;
+        formatted = element.substring(1, element.length);
+        if (regex.test(element)) {
+          return target.querySelectorAll(element);
+        } else if (element[0] === "#") {
+          return target.getElementById(formatted);
+        } else if (element[0] === ".") {
+          return target.getElementsByClassName(formatted);
+        } else {
+          return target.getElementsByTagName(element);
         }
       };
 
@@ -315,9 +334,9 @@
         } else if (typeof element === "object" && element.length) {
           element = element[0];
         }
-        this.el = typeof element === "string" ? document.querySelector(element) : element;
-        this.opts = options || {};
         this.helper = helper;
+        this.el = typeof element === "string" ? this.helper.selector(element) : element;
+        this.opts = options || {};
         this.browser = this.helper.checkBrowser();
         this.support = this.helper.checkSupport();
         this.events = this.helper.checkTouchEvents();
@@ -329,6 +348,7 @@
         this.opts.fitWidth = this.opts.fitWidth || false;
         this.opts.autoPlay = this.opts.autoPlay || false;
         this.opts.interval = this.opts.interval || 6600;
+        this.opts.clearInterval = this.opts.clearInterval || this.opts.interval / 2;
         this.opts.loop = this.opts.loop || (this.opts.autoPlay ? true : false);
         this.opts.transition = this.opts.transition || {};
         this.opts.transition = {
@@ -338,9 +358,10 @@
           })()
         };
         this.currentPoint = this.opts.currentPoint || 0;
+        this.childElementCount = this.el.childElementCount;
         this.maxPoint = this.currentX = this.maxX = 0;
         this.gestureStart = this.moveReady = this.scrolling = this.didCloneNode = false;
-        this.startTime = this.timerId = this.basePageX = this.startPageX = this.startPageY = this.distance = this.childNodes = this.visibleSize = null;
+        this.startTime = this.timerId = this.basePageX = this.startPageX = this.startPageY = this.distance = this.visibleSize = null;
         if (this.support.cssAnimation && !this.browser.isLegacy) {
           this.helper.setStyle(this.el, {
             transitionProperty: this.helper.getCSSVal("transform"),
@@ -420,23 +441,20 @@
           this._setTotalWidth();
         }
         getMaxPoint = function() {
-          var node, ret, _i, _len, _ref1;
+          var el, itemCount, _i, _len, _ref1;
 
-          ret = 0;
+          itemCount = 0;
           _ref1 = _this.el.childNodes;
           for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
-            node = _ref1[_i];
-            if (node.nodeType === 1) {
-              ret++;
+            el = _ref1[_i];
+            if (el.nodeType === 1) {
+              itemCount++;
             }
           }
-          if (ret > 0) {
-            ret--;
-          }
-          return ret;
+          return itemCount;
         };
         this.maxPoint = this.opts.maxPoint === void 0 ? getMaxPoint() : this.opts.maxPoint;
-        this.distance = this.opts.distance === void 0 ? this.el.scrollWidth / (this.maxPoint + 1) : this.opts.distance;
+        this.distance = this.opts.distance === void 0 ? this.el.scrollWidth / this.maxPoint : this.opts.distance;
         this.maxX = -this.distance * this.maxPoint;
         return this.moveToPoint();
       };
@@ -453,14 +471,14 @@
         if (!this.hasPrev()) {
           return;
         }
-        return this.moveToPoint(this.currentPoint--);
+        return this.moveToPoint(this.currentPoint - 1);
       };
 
       Core.prototype.toNext = function() {
         if (!this.hasNext()) {
           return;
         }
-        return this.moveToPoint(this.currentPoint++);
+        return this.moveToPoint(this.currentPoint + 1);
       };
 
       Core.prototype.moveToPoint = function(point, duration) {
@@ -731,33 +749,14 @@
       };
 
       Core.prototype._loop = function() {
-        var clearTime, smartLoop, timerId, transitionEndEventName,
+        var smartLoop, timerId, transitionEndEventName,
           _this = this;
 
-        clearTime = this.opts.interval / 2;
-        console.log("### currnetPoint  %s", this.currentPoint);
         smartLoop = function() {
-          switch (_this.currentPoint) {
-            case 4:
-              return _this.moveToPoint(12, 0);
-            case 3:
-              return _this.moveToPoint(11, 0);
-            case 2:
-              return _this.moveToPoint(10, 0);
-            case 1:
-              return _this.moveToPoint(9, 0);
-            case 0:
-              return _this.moveToPoint(8, 0);
-            case 13:
-              return _this.moveToPoint(5, 0);
-            case 14:
-              return _this.moveToPoint(6, 0);
-            case 15:
-              return _this.moveToPoint(7, 0);
-            case 16:
-              return _this.moveToPoint(8, 0);
-            case 17:
-              return _this.moveToPoint(9, 0);
+          if (_this.currentPoint <= _this.visibleSize) {
+            return _this.moveToPoint(_this.currentPoint + _this.childElementCount, 0);
+          } else if (_this.currentPoint >= (_this.maxPoint - _this.visibleSize)) {
+            return _this.moveToPoint(_this.currentPoint - _this.childElementCount, 0);
           }
         };
         transitionEndEventName = this.helper.getTransitionEndEventName();
@@ -765,12 +764,12 @@
           this.el.addEventListener(transitionEndEventName, smartLoop, false);
           return setTimeout(function() {
             return _this.el.removeEventListener(transitionEndEventName, smartLoop, false);
-          }, clearTime);
+          }, this.opts.clearInterval);
         } else {
           timerId = smartLoop;
           return clearTimeout(function() {
             return smartLoop();
-          }, clearTime);
+          }, this.opts.clearInterval);
         }
       };
 
