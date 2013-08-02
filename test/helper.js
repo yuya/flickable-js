@@ -351,31 +351,13 @@ describe("Helper Class", function() {
     });
   });
   return describe(".getTransitionEndEventName()", function() {
-    context("Google Chrome だと", function() {
+    return context("Google Chrome だと", function() {
       before(function() {
         return spoofUserAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_3) AppleWebKit/537.31 (KHTML, like Gecko) Chrome/26.0.1410.65 Safari/537.31");
       });
       return it("\"webkitTransitionEnd\" が返ってくる", function() {
         expect(helper.getTransitionEndEventName()).to.be.a("string");
         return expect(helper.getTransitionEndEventName()).to.be("webkitTransitionEnd");
-      });
-    });
-    context("Firefox だと", function() {
-      before(function() {
-        return spoofUserAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10.8; rv:19.0) Gecko/20100101 Firefox/19.0");
-      });
-      return it("\"transitionend\" が返ってくる", function() {
-        expect(helper.getTransitionEndEventName()).to.be.a("string");
-        return expect(helper.getTransitionEndEventName()).to.be("transitionend");
-      });
-    });
-    return context("Opera だと", function() {
-      before(function() {
-        return spoofUserAgent("Opera/9.80 (Macintosh; Intel Mac OS X 10.8.3; U; en) Presto/2.10.289 Version/12.02 (Core 2.10.289)");
-      });
-      return it("\"oTransitionEnd\" が返ってくる", function() {
-        expect(helper.getTransitionEndEventName()).to.be.a("string");
-        return expect(helper.getTransitionEndEventName()).to.be("oTransitionEnd");
       });
     });
   });

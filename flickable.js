@@ -1,5 +1,3 @@
-// Flickable.js 0.1.3 Copyright (c) 2013 @yuya
-// See https://github.com/yhmt/flickable-js
 (function() {
   var root, _ref;
 
@@ -143,7 +141,7 @@
       Helper.prototype.checkBrowser = function() {
         var android, browserName, browserVersion, ios, ua;
 
-        ua = window.navigator.userAgent.toLowerCase();
+        ua = navigator.userAgent.toLowerCase();
         ios = ua.match(/(?:iphone\sos|ip[oa]d.*os)\s([\d_]+)/);
         android = ua.match(/(android)\s+([\d.]+)/);
         browserName = !!ios ? "ios" : !!android ? "android" : "pc";
@@ -151,7 +149,7 @@
           if (!ios && !android) {
             return null;
           }
-          return parseFloat((ios || android).pop().split(/\D/).join("."), 10);
+          return parseFloat((ios || android).pop().split(/\D/).join("."));
         })();
         return {
           name: browserName,
@@ -191,6 +189,13 @@
         return window.innerWidth;
       };
 
+      Helper.prototype.getParentNodeWidth = function(element) {
+        if (element === void 0) {
+          throw new Error("Element Not Found");
+        }
+        return element.parentNode.offsetWidth;
+      };
+
       Helper.prototype.getElementWidth = function(element) {
         var border, boxSizingVal, css, hasBoxSizing, padding, styleParser, width;
 
@@ -221,7 +226,7 @@
             for (i = _i = 0, _len = props.length; _i < _len; i = ++_i) {
               prop = props[i];
               if (css[prop]) {
-                value[i] = parseFloat(css[props[0]].match(/\d+/), 10);
+                value[i] = parseFloat(css[props[0]].match(/\d+/));
                 total += value[i];
               }
             }
@@ -232,13 +237,13 @@
           width = element.scrollWidth + border + padding;
           return width;
         } else if (element.scrollWidth === 0) {
-          width = parseFloat(element.style.width.match(/\d+/), 10);
+          width = parseFloat(element.style.width.match(/\d+/));
           if (!element.style.boxSizing || !element.style.webkitBoxSizing) {
             if (element.style.paddingRight) {
-              width += parseFloat(element.style.paddingRight.match(/\d+/), 10);
+              width += parseFloat(element.style.paddingRight.match(/\d+/));
             }
             if (element.style.paddingLeft) {
-              width += parseFloat(element.style.paddingLeft.match(/\d+/), 10);
+              width += parseFloat(element.style.paddingLeft.match(/\d+/));
             }
           }
           return width;
@@ -269,9 +274,9 @@
         var browser, match, ua, version;
 
         ua = window.navigator.userAgent.toLowerCase();
-        match = /(webkit)[ \/]([\w.]+)/.exec(ua) || /(firefox)[ \/]([\w.]+)/.exec(ua) || /(msie) ([\w.]+)/.exec(ua) || /(opera)(?:.*version|)[ \/]([\w.]+)/.exec(ua) || [];
+        match = /(webkit)[ \/]([\w.]+)/.exec(ua || /(firefox)[ \/]([\w.]+)/.exec(ua || /(msie) ([\w.]+)/.exec(ua || /(opera)(?:.*version|)[ \/]([\w.]+)/.exec(ua || []))));
         browser = match[1];
-        version = parseFloat(match[2], 10);
+        version = parseFloat(match[2]);
         if (browser === "msie" && version >= 10) {
           browser = "modernIE";
         }
@@ -297,9 +302,9 @@
     var Core;
 
     return Core = (function() {
-      var Helper;
+      var helper;
 
-      Helper = new Flickable.Helper();
+      helper = new Flickable.Helper();
 
       function Core(element, options, callback) {
         var eventName,
@@ -312,7 +317,7 @@
         }
         this.el = typeof element === "string" ? document.querySelector(element) : element;
         this.opts = options || {};
-        this.helper = Helper;
+        this.helper = helper;
         this.browser = this.helper.checkBrowser();
         this.support = this.helper.checkSupport();
         this.events = this.helper.checkTouchEvents();
@@ -332,10 +337,10 @@
             return _this.opts.transition["duration"] || (_this.browser.isLegacy ? "200ms" : "330ms");
           })()
         };
-        this.currentPoint = this.opts.currentPoint === void 0 && this.opts.loop ? 1 : this.opts.currentPoint || 0;
+        this.currentPoint = this.opts.currentPoint || 0;
         this.maxPoint = this.currentX = this.maxX = 0;
         this.gestureStart = this.moveReady = this.scrolling = this.didCloneNode = false;
-        this.startTime = this.timerId = this.basePageX = this.startPageX = this.startPageY = this.distance = null;
+        this.startTime = this.timerId = this.basePageX = this.startPageX = this.startPageY = this.distance = this.childNodes = this.visibleSize = null;
         if (this.support.cssAnimation && !this.browser.isLegacy) {
           this.helper.setStyle(this.el, {
             transitionProperty: this.helper.getCSSVal("transform"),
@@ -381,13 +386,13 @@
           }, false);
         }
         this.el.addEventListener(this.events.start, this, false);
-        if (this.opts.loop) {
-          this._cloneNode();
-        }
         if (callback && typeof callback !== "function") {
           throw new TypeError("Must be a Function");
         } else if (callback) {
           callback();
+        }
+        if (this.opts.loop) {
+          this._cloneNode();
         }
         this.refresh();
       }
@@ -410,25 +415,25 @@
           _this = this;
 
         if (this.opts.fitWidth) {
-          this._setTotalWidth(this.helper.getDeviceWidth());
+          this._setTotalWidth(this.helper.getParentNodeWidth(this.el));
         } else if (this.opts.setWidth) {
           this._setTotalWidth();
         }
         getMaxPoint = function() {
-          var childNodes, i, itemLength, node, _i, _len;
+          var node, ret, _i, _len, _ref1;
 
-          childNodes = _this.el.childNodes;
-          itemLength = 0;
-          for (i = _i = 0, _len = childNodes.length; _i < _len; i = ++_i) {
-            node = childNodes[i];
+          ret = 0;
+          _ref1 = _this.el.childNodes;
+          for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+            node = _ref1[_i];
             if (node.nodeType === 1) {
-              itemLength++;
+              ret++;
             }
           }
-          if (itemLength > 0) {
-            itemLength--;
+          if (ret > 0) {
+            ret--;
           }
-          return itemLength;
+          return ret;
         };
         this.maxPoint = this.opts.maxPoint === void 0 ? getMaxPoint() : this.opts.maxPoint;
         this.distance = this.opts.distance === void 0 ? this.el.scrollWidth / (this.maxPoint + 1) : this.opts.distance;
@@ -448,14 +453,14 @@
         if (!this.hasPrev()) {
           return;
         }
-        return this.moveToPoint(this.currentPoint - 1);
+        return this.moveToPoint(this.currentPoint--);
       };
 
       Core.prototype.toNext = function() {
         if (!this.hasNext()) {
           return;
         }
-        return this.moveToPoint(this.currentPoint + 1);
+        return this.moveToPoint(this.currentPoint++);
       };
 
       Core.prototype.moveToPoint = function(point, duration) {
@@ -626,7 +631,7 @@
 
         this.scrolling = false;
         this.moveReady = false;
-        window.setTimeout(function() {
+        setTimeout(function() {
           return _this.el.removeEventListener("click", _this, true);
         }, 200);
         return this.helper.triggerEvent(this.el, "fltouchend", true, false, params);
@@ -646,23 +651,43 @@
       };
 
       Core.prototype._cloneNode = function() {
-        var childNodes, firstItem, itemAry, lastItem, node, _i, _len;
+        var i, insertNode, insertedCount, nodeAry, parentNodeWidth,
+          _this = this;
 
-        childNodes = this.el.childNodes;
-        itemAry = [];
         if (!(this.opts.loop || this.didCloneNode)) {
           return;
         }
-        for (_i = 0, _len = childNodes.length; _i < _len; _i++) {
-          node = childNodes[_i];
-          if (node.nodeType === 1) {
-            itemAry.push(node);
+        nodeAry = (function() {
+          var node, ret, _i, _len, _ref1;
+
+          ret = [];
+          _ref1 = _this.el.childNodes;
+          for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+            node = _ref1[_i];
+            if (node.nodeType === 1) {
+              ret.push(node);
+            }
           }
+          return ret;
+        })();
+        parentNodeWidth = this.helper.getParentNodeWidth(this.el);
+        insertedCount = 0;
+        insertNode = function(start, end) {
+          var firstItem, lastItem;
+
+          firstItem = nodeAry[start];
+          lastItem = nodeAry[nodeAry.length - end];
+          _this.el.insertBefore(lastItem.cloneNode(true), nodeAry[0]);
+          return _this.el.appendChild(firstItem.cloneNode(true));
+        };
+        this.childNodes = nodeAry;
+        this.visibleSize = (parseInt(parentNodeWidth / nodeAry[0].offsetWidth, 10)) + 1;
+        while (insertedCount < this.visibleSize) {
+          i = insertedCount;
+          insertNode(i, this.visibleSize - i);
+          insertedCount++;
         }
-        firstItem = itemAry.shift();
-        lastItem = itemAry.pop();
-        this.el.insertBefore(lastItem.cloneNode(true), firstItem);
-        this.el.appendChild(firstItem.cloneNode(true));
+        this.currentPoint = this.visibleSize;
         this.didCloneNode = true;
       };
 
@@ -678,12 +703,12 @@
         };
         interval = this.opts.interval;
         return (function() {
-          _this.timerId = window.setInterval(toNextFn, interval);
+          _this.timerId = setInterval(toNextFn, interval);
         })();
       };
 
       Core.prototype._clearAutoPlay = function() {
-        return window.clearInterval(this.timerId);
+        return clearInterval(this.timerId);
       };
 
       Core.prototype._setTotalWidth = function(width) {
@@ -706,27 +731,44 @@
       };
 
       Core.prototype._loop = function() {
-        var clearTime, lastPoint, smartLoop, timerId, transitionEndEventName,
+        var clearTime, smartLoop, timerId, transitionEndEventName,
           _this = this;
 
-        lastPoint = this.maxPoint - 1;
         clearTime = this.opts.interval / 2;
+        console.log("### currnetPoint  %s", this.currentPoint);
         smartLoop = function() {
-          if (_this.currentPoint === _this.maxPoint) {
-            return _this.moveToPoint(1, 0);
-          } else if (_this.currentPoint === 0) {
-            return _this.moveToPoint(lastPoint, 0);
+          switch (_this.currentPoint) {
+            case 4:
+              return _this.moveToPoint(12, 0);
+            case 3:
+              return _this.moveToPoint(11, 0);
+            case 2:
+              return _this.moveToPoint(10, 0);
+            case 1:
+              return _this.moveToPoint(9, 0);
+            case 0:
+              return _this.moveToPoint(8, 0);
+            case 13:
+              return _this.moveToPoint(5, 0);
+            case 14:
+              return _this.moveToPoint(6, 0);
+            case 15:
+              return _this.moveToPoint(7, 0);
+            case 16:
+              return _this.moveToPoint(8, 0);
+            case 17:
+              return _this.moveToPoint(9, 0);
           }
         };
         transitionEndEventName = this.helper.getTransitionEndEventName();
         if (transitionEndEventName !== void 0) {
           this.el.addEventListener(transitionEndEventName, smartLoop, false);
-          return window.setTimeout(function() {
+          return setTimeout(function() {
             return _this.el.removeEventListener(transitionEndEventName, smartLoop, false);
           }, clearTime);
         } else {
           timerId = smartLoop;
-          return window.clearTimeout(function() {
+          return clearTimeout(function() {
             return smartLoop();
           }, clearTime);
         }
@@ -738,16 +780,16 @@
         begin = +new Date();
         from = parseInt(this.el.style.left, 10);
         to = x;
-        duration = parseInt(duration, 10) || this.opts.transition["duration"];
+        duration = parseInt(duration, 10 || this.opts.transition["duration"]);
         easing = function(time, duration) {
           return -(time /= duration) * (time - 2);
         };
-        timer = window.setInterval(function() {
+        timer = setInterval(function() {
           var now, pos, time;
 
           time = new Date() - begin;
           if (time > duration) {
-            window.clearInterval(timer);
+            clearInterval(timer);
             now = to;
           } else {
             pos = easing(time, duration);
@@ -769,6 +811,6 @@
     })();
   });
 
-  window.Flickable = Flickable.Core;
+  root.Flickable = Flickable.Core;
 
 }).call(this);

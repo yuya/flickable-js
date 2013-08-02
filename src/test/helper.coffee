@@ -21,17 +21,17 @@ describe "Helper Class", ->
 
     it "click イベントが発火しただけだし pageX は 0 が返ってくる", ->
       el.on "click", (event) ->
-        expect(helper.getPage(event, "pageX")).to.be(0)
+        expect(helper.getPage(event, "pageX")).to.be 0
       el.click()
     it "#{moveEvent} イベントが発火しただけだし pageY は 0 が返ってくる", ->
       el.on moveEvent, (event) ->
-        expect(helper.getPage(event, "pageY")).to.be(0)
+        expect(helper.getPage(event, "pageY")).to.be 0
       el.click()
     it "全く関係ない load イベントとかで取得しようとしても undefined とかじゃね シラネ", ->
-      evt = document.createEvent("Event")
-      evt.initEvent("load", false, false)
+      evt = document.createEvent "Event"
+      evt.initEvent "load", false, false
 
-      expect(helper.getPage(evt, "pageX")).to.be.a("undefined")
+      expect(helper.getPage(evt, "pageX")).to.be.a "undefined"
 
   describe ".hasProp()", ->
     it "先行実装な CSS Property の配列を渡すと存在するかチェケラする。今どき transform ならあるよね", ->
@@ -52,27 +52,27 @@ describe "Helper Class", ->
         expect(err).to.be.a(TypeError)
 
   describe ".setStyle()", ->
-    el = document.createElement("div")
+    el = document.createElement "div"
 
     beforeEach (done) ->
-      el.removeAttribute("style")
+      el.removeAttribute "style"
       helper.saveProp = {}
       done()
 
-    it ("display: none; を追加したから style=\"diplay: none;\" ってなってるはず"), ->
+    it "display: none; を追加したから style=\"diplay: none;\" ってなってるはず", ->
       helper.setStyle(el,
         display: "none"
       )
-      expect(el.getAttribute("style")).to.be("display: none; ")
-    it ("プロパティ複数指定したら、指定した順番に style 属性に入ってるはず"), ->
+      expect(el.getAttribute("style")).to.be "display: none; "
+    it "プロパティ複数指定したら、指定した順番に style 属性に入ってるはず", ->
       helper.setStyle(el,
         display: "none"
         width: "100px"
         height: "100px"
         margin: "0px auto"
       )
-      expect(el.getAttribute("style")).to.be("display: none; width: 100px; height: 100px; margin-top: 0px; margin-right: auto; margin-bottom: 0px; margin-left: auto; ")
-    it ("prefix が必要なやつはプロパティはよしなに prefix つけて、よしなに纏めてくれるはず"), ->
+      expect(el.getAttribute("style")).to.be "display: none; width: 100px; height: 100px; margin-top: 0px; margin-right: auto; margin-bottom: 0px; margin-left: auto; "
+    it "prefix が必要なやつはプロパティはよしなに prefix つけて、よしなに纏めてくれるはず", ->
       helper.setStyle(el,
         width: "100px"
         height: "100px"
@@ -80,34 +80,34 @@ describe "Helper Class", ->
         transitionTimingFunction: "ease"
         transitionDuration: "0ms"
       )
-      expect(el.getAttribute("style")).to.be("width: 100px; height: 100px; -webkit-transform: translate(0px, 0px); -webkit-transition-timing-function: ease; -webkit-transition-duration: 0ms; ")
+      expect(el.getAttribute("style")).to.be "width: 100px; height: 100px; -webkit-transform: translate(0px, 0px); -webkit-transition-timing-function: ease; -webkit-transition-duration: 0ms; "
 
   describe ".getCSSVal()", ->
     fn = (arg) -> helper.getCSSVal(arg)
 
     it "仮に webkit だとしたら、transform を入れると \"-webkit-transform\" が返ってくる", ->
-      expect(fn("transform")).to.be.a("string")
-      expect(fn("transform")).to.be("-webkit-transform")
+      expect(fn("transform")).to.be.a "string"
+      expect(fn("transform")).to.be "-webkit-transform"
     it "width とか prefix なしで余裕なプロパティいれるとありのまま木の実ナナで返ってくる", ->
-      expect(fn("width")).to.be.a("string")
-      expect(fn("width")).to.be("width")
+      expect(fn("width")).to.be.a "string"
+      expect(fn("width")).to.be "width"
     it "うっかり配列とか入れたら TypeError 投げつけて激おこプンプン丸", ->
       (expect -> fn([1..3])).to.throwException (err) ->
-        expect(err).to.be.a(TypeError)
+        expect(err).to.be.a TypeError
 
   describe ".ucFirst()", ->
     it "\"webkitTransform\" とか渡すと \"WebkitTransform\" で返ってくる", ->
-      expect(helper.ucFirst("webkitTransform")).to.be.a("string")
-      expect(helper.ucFirst("webkitTransform")).to.be("WebkitTransform")
+      expect(helper.ucFirst("webkitTransform")).to.be.a "string"
+      expect(helper.ucFirst("webkitTransform")).to.be "WebkitTransform"
     it "String だけどアルファベットじゃない君 (\"123\") はありのままの君", ->
-      expect(helper.ucFirst("123")).to.be.a("string")
-      expect(helper.ucFirst("123")).to.be("123")
+      expect(helper.ucFirst("123")).to.be.a "string"
+      expect(helper.ucFirst("123")).to.be "123"
     it "String じゃないものだったら TypeError 投げる", ->
       (expect -> helper.ucFirst([1..3])).to.throwException (err) ->
-        expect(err).to.be.a(TypeError)
+        expect(err).to.be.a TypeError
 
   describe ".triggerEvent()", ->
-    el = document.createElement("div")
+    el = document.createElement "div"
 
     it "hoge イベントでも意味なく発火させてみる", ->
       eventName = "hoge"
@@ -118,12 +118,12 @@ describe "Helper Class", ->
         @event    = event
         firedFlag = true
       , false
-      helper.triggerEvent(el, eventName, true, false)
+      helper.triggerEvent el, eventName, true, false
 
-      expect(@event.type).to.be(eventName)
+      expect(@event.type).to.be eventName
       expect(@event.bubbles).to.be.true
       expect(@event.cancelable).to.be.false
-      expect(@event.data).to.be.a("undefined")
+      expect(@event.data).to.be.a "undefined"
       expect(firedFlag).to.be.true
 
     it "event 発火と同時にひっさげた data がちゃんと取得できるかな", ->
@@ -140,12 +140,12 @@ describe "Helper Class", ->
         name: "山田太郎"
         hasYaruki: null
 
-      expect(@event.type).to.be(eventName)
+      expect(@event.type).to.be eventName
       expect(@event.bubbles).to.be.true
       expect(@event.cancelable).to.be.false
 
-      expect(@event.id).to.be(300)
-      expect(@event.name).to.be("山田太郎")
+      expect(@event.id).to.be 300
+      expect(@event.name).to.be "山田太郎"
       expect(@event.hasYaruki).to.be.null
 
       expect(firedFlag).to.be.true
@@ -159,46 +159,46 @@ describe "Helper Class", ->
         @event    = event
         firedFlag = true
       , false
-      (expect -> helper.triggerEvent("el", eventName, true, false)).to.throwError()
+      (expect -> helper.triggerEvent "el", eventName, true, false).to.throwError()
 
   describe ".checkBrowser()", ->
     fn = (arg) -> helper.checkBrowser[arg]
 
     context "iOS 6.1.3 で試してみました", ->
-      spoofUserAgent("Mozilla/5.0 (iPhone; CPU iPhone OS 6_1_3 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) Mobile/10B329")
+      spoofUserAgent "Mozilla/5.0 (iPhone; CPU iPhone OS 6_1_3 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) Mobile/10B329"
 
       it "name: \"ios\" が返ってくる", ->
-        expect(helper.checkBrowser().name).to.be.a("string")
-        expect(helper.checkBrowser().name).to.be("ios")
+        expect(helper.checkBrowser().name).to.be.a "string"
+        expect(helper.checkBrowser().name).to.be "ios"
       it "version: 6.1 が返ってくる", ->
-        expect(helper.checkBrowser().version).to.be.a("number")
-        expect(helper.checkBrowser().version).to.be(6.1)
+        expect(helper.checkBrowser().version).to.be.a "number"
+        expect(helper.checkBrowser().version).to.be 6.1
       it "特にレガシーなわけでもないので isLegacy: false が返ってくる", ->
         expect(helper.checkBrowser().isLegacy).to.be.false
 
     context "Android 4.0.2 で試してみました", ->
       before ->
-        spoofUserAgent("Mozilla/5.0 (Linux; U; Android 4.0.2; en-us; Galaxy Nexus Build/ICL53F) AppleWebKit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30")
+        spoofUserAgent "Mozilla/5.0 (Linux; U; Android 4.0.2; en-us; Galaxy Nexus Build/ICL53F) AppleWebKit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30"
 
       it "name: \"android\" が返ってくる", ->
-        expect(helper.checkBrowser().name).to.be.a("string")
-        expect(helper.checkBrowser().name).to.be("android")
+        expect(helper.checkBrowser().name).to.be.a "string"
+        expect(helper.checkBrowser().name).to.be "android"
       it "version: 4 が返ってくる", ->
-        expect(helper.checkBrowser().version).to.be.a("number")
-        expect(helper.checkBrowser().version).to.be(4)
+        expect(helper.checkBrowser().version).to.be.a "number"
+        expect(helper.checkBrowser().version).to.be 4
       it "特にレガシーなわけでもないので isLegacy: false が返ってくる", ->
         expect(helper.checkBrowser().isLegacy).to.be.false
 
     context "Android 2.3.6 で試してみました", ->
       before ->
-        spoofUserAgent("Mozilla/5.0 (Linux; U; Android 2.3.6; en-us; Nexus S Build/GRK39F) AppleWebKit/533.1 (KHTML, like Gecko) Version/4.0 Mobile Safari/533.1")
+        spoofUserAgent "Mozilla/5.0 (Linux; U; Android 2.3.6; en-us; Nexus S Build/GRK39F) AppleWebKit/533.1 (KHTML, like Gecko) Version/4.0 Mobile Safari/533.1"
 
       it "name: \"android\" が返ってくる", ->
-        expect(helper.checkBrowser().name).to.be.a("string")
-        expect(helper.checkBrowser().name).to.be("android")
+        expect(helper.checkBrowser().name).to.be.a "string"
+        expect(helper.checkBrowser().name).to.be "android"
       it "version: 2.3 が返ってくる", ->
-        expect(helper.checkBrowser().version).to.be.a("number")
-        expect(helper.checkBrowser().version).to.be(2.3)
+        expect(helper.checkBrowser().version).to.be.a "number"
+        expect(helper.checkBrowser().version).to.be 2.3
       it "Android 2.x とかレガシーでとてもク◯ソなので isLegacy: true が返ってくる", ->
         expect(helper.checkBrowser().isLegacy).to.be.true
 
@@ -227,21 +227,21 @@ describe "Helper Class", ->
         it "なもんで start: \"touchstart\" が返ってくる", ->
           expect(fn.start).to.be("touchstart")
         it "なもんで move: \"touchmove\" が返ってくる", ->
-          expect(helper.checkTouchEvents().move).to.be("touchmove")
+          expect(helper.checkTouchEvents().move).to.be "touchmove"
         it "なもんで end: \"touchend\" が返ってくる", ->
-          expect(fn.end).to.be("touchend")
+          expect(fn.end).to.be "touchend"
     else
       context "タッチイベント持ってませんね", ->
         it "なもんで start: \"mousedown\" が返ってくる", ->
-          expect(fn.start).to.be("mousedown")
+          expect(fn.start).to.be "mousedown"
         it "なもんで move: \"mousemove\" が返ってくる", ->
-          expect(fn.move).to.be("mousemove")
+          expect(fn.move).to.be "mousemove"
         it "なもんで end: \"mouseup\" が返ってくる", ->
-          expect(fn.end).to.be("mouseup")
+          expect(fn.end).to.be "mouseup"
 
   describe ".getElementWidth()", ->
-    el = document.createElement("div")
-    fn = (arg) -> helper.getElementWidth(arg)
+    el = document.createElement "div"
+    fn = (arg) -> helper.getElementWidth arg
 
     beforeEach (done) ->
       el.style = ""
@@ -252,8 +252,8 @@ describe "Helper Class", ->
         el.style.width = "100px"
 
       it "Number で 100 が返ってくる", ->
-        expect(fn(el)).to.be.a("number")
-        expect(fn(el)).to.be(100)
+        expect(fn(el)).to.be.a "number"
+        expect(fn(el)).to.be 100
 
     context "width: 80px; padding-right: 10px; な要素だと", ->
       before ->
@@ -261,8 +261,8 @@ describe "Helper Class", ->
         el.style.paddingRight = "10px"
 
       it "幅 80 と padding の 10 足して 90 が返ってくる。", ->
-        expect(fn(el)).to.be.a("number")
-        expect(fn(el)).to.be(90)
+        expect(fn(el)).to.be.a "number"
+        expect(fn(el)).to.be 90
 
     context "width: 80px; padding-right: 10px; -webkit-box-sizing: border-box; box-sizing: border-box; な要素を取得すると", ->
       before ->
@@ -272,30 +272,30 @@ describe "Helper Class", ->
         el.style.boxSizing       = "border-box";
 
       it "90 なのかなーと思いきや box-sizing: border-box; の効能で 80 が返ってくる。", ->
-        expect(fn(el)).to.be.a("number")
-        expect(fn(el)).to.be(80)
+        expect(fn(el)).to.be.a "number"
+        expect(fn(el)).to.be 80
 
   describe ".getTransitionEndEventName()", ->
     context "Google Chrome だと", ->
       before ->
-        spoofUserAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_3) AppleWebKit/537.31 (KHTML, like Gecko) Chrome/26.0.1410.65 Safari/537.31")
+        spoofUserAgent "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_3) AppleWebKit/537.31 (KHTML, like Gecko) Chrome/26.0.1410.65 Safari/537.31"
 
       it "\"webkitTransitionEnd\" が返ってくる", ->
-        expect(helper.getTransitionEndEventName()).to.be.a("string")
-        expect(helper.getTransitionEndEventName()).to.be("webkitTransitionEnd")
+        expect(helper.getTransitionEndEventName()).to.be.a "string"
+        expect(helper.getTransitionEndEventName()).to.be "webkitTransitionEnd"
 
-    context "Firefox だと", ->
-      before ->
-        spoofUserAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10.8; rv:19.0) Gecko/20100101 Firefox/19.0")
+    # context "Firefox だと", ->
+    #   before ->
+    #     spoofUserAgent "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.8; rv:19.0) Gecko/20100101 Firefox/19.0"
 
-      it "\"transitionend\" が返ってくる", ->
-        expect(helper.getTransitionEndEventName()).to.be.a("string")
-        expect(helper.getTransitionEndEventName()).to.be("transitionend")
+    #   it "\"transitionend\" が返ってくる", ->
+    #     expect(helper.getTransitionEndEventName()).to.be.a "string"
+    #     expect(helper.getTransitionEndEventName()).to.be "transitionend"
 
-    context "Opera だと", ->
-      before ->
-        spoofUserAgent("Opera/9.80 (Macintosh; Intel Mac OS X 10.8.3; U; en) Presto/2.10.289 Version/12.02 (Core 2.10.289)")
+    # context "Opera だと", ->
+    #   before ->
+    #     spoofUserAgent "Opera/9.80 (Macintosh; Intel Mac OS X 10.8.3; U; en) Presto/2.10.289 Version/12.02 (Core 2.10.289)"
 
-      it "\"oTransitionEnd\" が返ってくる", ->
-        expect(helper.getTransitionEndEventName()).to.be.a("string")
-        expect(helper.getTransitionEndEventName()).to.be("oTransitionEnd")
+    #   it "\"oTransitionEnd\" が返ってくる", ->
+    #     expect(helper.getTransitionEndEventName()).to.be.a "string"
+    #     expect(helper.getTransitionEndEventName()).to.be "oTransitionEnd"

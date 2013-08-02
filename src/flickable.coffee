@@ -4,11 +4,11 @@ namespace "Flickable", -> class Core
 
   constructor: (element, options, callback) ->
     if not element
-      throw new Error("Element Not Found")
+      throw new Error "Element Not Found"
     else if typeof element is "object" and element.length
       element = element[0]
 
-    @el      = if typeof element is "string" then document.querySelector(element) else element
+    @el      = if typeof element is "string" then document.querySelector element else element
     @opts    = options or {}
     @helper  = helper
     @browser = @helper.checkBrowser()
@@ -32,15 +32,16 @@ namespace "Flickable", -> class Core
         @opts.transition["duration"] or if @browser.isLegacy then "200ms" else "330ms"
 
     # Variable Params
-    @currentPoint = if @opts.currentPoint is undefined and @opts.loop then 1 else @opts.currentPoint or 0
+    # @currentPoint = if @opts.currentPoint is undefined and @opts.loop then 1 else @opts.currentPoint or 0
+    @currentPoint = @opts.currentPoint or 0
     @maxPoint     = @currentX   = @maxX                       = 0
     @gestureStart = @moveReady  = @scrolling  = @didCloneNode = false
-    @startTime    = @timerId    =
-    @basePageX    = @startPageX = @startPageY = @distance     = null
+    @startTime    = @timerId    = @basePageX  = @startPageX   =
+    @startPageY   = @distance   = @childNodes = @visibleSize  = null
 
     if @support.cssAnimation and not @browser.isLegacy
       @helper.setStyle @el,
-        transitionProperty:       @helper.getCSSVal("transform")
+        transitionProperty:       @helper.getCSSVal "transform"
         transitionDuration:       "0ms"
         transitionTimingFunction: @opts.transition["timingFunction"]
         transform:                @_getTranslate(0)
@@ -81,49 +82,54 @@ namespace "Flickable", -> class Core
         @refresh()
       , false
 
-    @el.addEventListener(@events.start, @, false)
-
-    if @opts.loop then @_cloneNode()
+    @el.addEventListener @events.start, @, false
 
     # 任意の callback を実行
     if callback and typeof callback isnt "function"
-      throw new TypeError("Must be a Function")
+      throw new TypeError "Must be a Function"
     else if callback
       callback()
+
+    if @opts.loop then @_cloneNode()
 
     @refresh()
 
   handleEvent: (event) ->
     switch event.type
       when @events.start
-        @_touchStart(event)
+        @_touchStart event
       when @events.move
-        @_touchMove(event)
+        @_touchMove event
       when @events.end
-        @_touchEnd(event)
+        @_touchEnd event
       when "click"
-        @_click(event)
+        @_click event
 
   refresh: ->
     if @opts.fitWidth
-      @_setTotalWidth(@helper.getDeviceWidth())
+      @_setTotalWidth @helper.getParentNodeWidth(@el)
     else if @opts.setWidth
       @_setTotalWidth()
 
     getMaxPoint = =>
-      childNodes = @el.childNodes
-      itemLength = 0
+      ret = 0
 
-      for node, i in childNodes
-        if node.nodeType is 1 then itemLength++
+      for node in @el.childNodes
+        if node.nodeType is 1 then ret++
 
-      if itemLength > 0 then itemLength--
+      # if @opts.loop
+      #   if @visibleNodeSize > 1 then ret
+      # else
+      if ret > 0 then ret--
 
-      return itemLength
+      return ret
 
-    @maxPoint     = if @opts.maxPoint is undefined then getMaxPoint()                     else @opts.maxPoint
-    @distance     = if @opts.distance is undefined then @el.scrollWidth / (@maxPoint + 1) else @opts.distance
-    @maxX         = -@distance * @maxPoint
+    @maxPoint = if @opts.maxPoint is undefined then getMaxPoint() else @opts.maxPoint
+    @distance = if @opts.distance is undefined then @el.scrollWidth / (@maxPoint + 1) else @opts.distance
+    @maxX     = -@distance * @maxPoint
+
+    # if @opts.loop and (@visibleSize > 1)
+    #   @maxPoint = @maxPoint - @visibleSize
 
     @moveToPoint()
 
@@ -135,15 +141,15 @@ namespace "Flickable", -> class Core
 
   toPrev: ->
     unless @hasPrev() then return
-    @moveToPoint(@currentPoint - 1)
+    @moveToPoint @currentPoint--
 
   toNext: ->
     unless @hasNext() then return
-    @moveToPoint(@currentPoint + 1)
+    @moveToPoint @currentPoint++
 
   moveToPoint: (point = @currentPoint, duration = @opts.transition["duration"]) ->
     beforePoint   = @currentPoint
-    @currentPoint = if point < 0 then 0 else if point > @maxPoint then @maxPoint else parseInt(point, 10)
+    @currentPoint = if point < 0 then 0 else if point > @maxPoint then @maxPoint else parseInt point, 10
 
     if @support.cssAnimation
       @helper.setStyle @el,
@@ -153,8 +159,8 @@ namespace "Flickable", -> class Core
 
     @_setX(- @currentPoint * @distance, duration)
 
-    if (beforePoint isnt @currentPoint)
-      @helper.triggerEvent(@el, "flpointmove", true, false)
+    if beforePoint isnt @currentPoint
+      @helper.triggerEvent @el, "flpointmove", true, false
       if @opts.loop then @_loop()
 
   _setX: (x, duration = @opts.transition["duration"]) ->
@@ -162,24 +168,24 @@ namespace "Flickable", -> class Core
 
     if @support.cssAnimation and not @browser.isLegacy
       @helper.setStyle @el,
-        transform: @_getTranslate(x)
+        transform: @_getTranslate x
     else if @browser.isLegacy or not @otps.useJsAnimate
       @el.style.left = "#{x}px"
       return
     else
-      @_jsAnimate(x, duration)
+      @_jsAnimate x, duration
 
   _touchStart: (event) ->
     if @opts.disableTouch or @gestureStart then return
 
     if @opts.loop
       if @currentPoint is @maxPoint
-        @moveToPoint(1, 0)
+        @moveToPoint 1, 0
       else if @currentPoint is 0
-        @moveToPoint(@maxPoint - 1, 0)
+        @moveToPoint @maxPoint - 1, 0
 
-    @el.addEventListener(@events.move,     @, false)
-    document.addEventListener(@events.end, @, false)
+    @el.addEventListener @events.move,     @, false
+    document.addEventListener @events.end, @, false
 
     unless @support.touch then event.preventDefault()
 
@@ -192,21 +198,21 @@ namespace "Flickable", -> class Core
     @scrolling  = true
     @moveReady  = false
 
-    @startPageX = @helper.getPage(event, "pageX")
-    @startPageY = @helper.getPage(event, "pageY")
+    @startPageX = @helper.getPage event, "pageX"
+    @startPageY = @helper.getPage event, "pageY"
     @basePageX  = @startPageX
 
     @directionX = 0
     @startTime  = event.timeStamp
 
-    @helper.triggerEvent(@el, "fltouchstart", true, false)
+    @helper.triggerEvent @el, "fltouchstart", true, false
 
   _touchMove: (event) ->
     if @opts.autoPlay then @_clearAutoPlay()
     unless @scrolling or @gestureStart then return
 
-    pageX = @helper.getPage(event, "pageX")
-    pageY = @helper.getPage(event, "pageY")
+    pageX = @helper.getPage event, "pageX"
+    pageY = @helper.getPage event, "pageY"
 
     if @moveReady
       event.preventDefault()
@@ -215,7 +221,7 @@ namespace "Flickable", -> class Core
       distX = pageX - @basePageX
       newX  = @currentX + distX
 
-      if newX >= 0 or newX < @maxX then newX = Math.round(@currentX + distX / 3)
+      if newX >= 0 or newX < @maxX then newX = Math.round @currentX + distX / 3
 
       @directionX = if distX is 0 then @directionX else if distX > 0 then -1 else 1
       isPrevent   = not @helper.triggerEvent @el, "fltouchmove", true, true,
@@ -232,14 +238,14 @@ namespace "Flickable", -> class Core
         @_setX(newX)
 
     else
-      deltaX = Math.abs(pageX - @startPageX)
-      deltaY = Math.abs(pageY - @startPageY)
+      deltaX = Math.abs pageX - @startPageX
+      deltaY = Math.abs pageY - @startPageY
 
       if deltaX > 5
         event.preventDefault()
         event.stopPropagation()
         @moveReady = true
-        @el.addEventListener("click", @, true)
+        @el.addEventListener "click", @, true
       else if deltaY > 5
         @scrolling = false
 
@@ -247,14 +253,14 @@ namespace "Flickable", -> class Core
     if @opts.autoPlay then @_startAutoPlay()
 
   _touchEnd: (event) ->
-    @el.removeEventListener(@events.move, @, false)
-    document.removeEventListener(@events.end, @, false)
+    @el.removeEventListener @events.move, @, false
+    document.removeEventListener @events.end, @, false
 
     unless @scrolling then return
 
     newPoint = do =>
       point = -@currentX / @distance
-      if @directionX > 0 then Math.ceil(point) else if @directionX < 0 then Math.floor(point) else Math.round(point)
+      if @directionX > 0 then Math.ceil point else if @directionX < 0 then Math.floor point else Math.round point
 
     if newPoint < 0
       newPoint = 0
@@ -273,11 +279,11 @@ namespace "Flickable", -> class Core
     @scrolling = false
     @moveReady = false
 
-    window.setTimeout =>
-      @el.removeEventListener("click", @, true)
+    setTimeout =>
+      @el.removeEventListener "click", @, true
     , 200
 
-    @helper.triggerEvent(@el, "fltouchend", true, false, params)
+    @helper.triggerEvent @el, "fltouchend", true, false, params
 
   _click: (event) ->
     event.stopPropagation()
@@ -287,20 +293,32 @@ namespace "Flickable", -> class Core
     if @opts.use3d then "translate3d(#{x}px, 0, 0)" else "translate(#{x}px, 0)"
 
   _cloneNode: ->
-    childNodes = @el.childNodes
-    itemAry    = []
-
     unless @opts.loop or @didCloneNode then return
 
-    for node in childNodes
-      if node.nodeType is 1 then itemAry.push(node)
+    nodeAry = do =>
+      ret = []
+      for node in @el.childNodes
+        if node.nodeType is 1 then ret.push node
+      return ret
+    parentNodeWidth = @helper.getParentNodeWidth @el
+    insertedCount   = 0
+    insertNode      = (start, end) =>
+      firstItem  = nodeAry[start]
+      lastItem   = nodeAry[nodeAry.length - end]
 
-    firstItem = itemAry.shift()
-    lastItem  = itemAry.pop()
+      @el.insertBefore lastItem.cloneNode(true), nodeAry[0]
+      @el.appendChild firstItem.cloneNode(true)
 
-    @el.insertBefore(lastItem.cloneNode(true), firstItem)
-    @el.appendChild(firstItem.cloneNode(true))
+    @childNodes  = nodeAry
+    # 画面に見えている要素数に対して余分1個追加し、途切れて見えるのを防ぐ
+    @visibleSize = (parseInt parentNodeWidth / nodeAry[0].offsetWidth, 10) + 1
 
+    while insertedCount < @visibleSize
+      i = insertedCount
+      insertNode i, @visibleSize - i
+      insertedCount++
+
+    @currentPoint = @visibleSize
     @didCloneNode = true
     return
 
@@ -311,22 +329,22 @@ namespace "Flickable", -> class Core
     interval = @opts.interval
 
     do =>
-      @timerId = window.setInterval(toNextFn, interval)
+      @timerId = setInterval toNextFn, interval
       return
 
   _clearAutoPlay: ->
-    window.clearInterval(@timerId)
+    clearInterval(@timerId)
 
   _setTotalWidth: (width) ->
-    if width and typeof width isnt "number" then throw new TypeError("Must be a Number")
+    if width and typeof width isnt "number" then throw new TypeError "Must be a Number"
 
     childNodes = @el.childNodes
     itemAry    = if childNodes.length isnt 0 then [] else [@el]
 
     for node in childNodes
-      if node.nodeType is 1 then itemAry.push(node)
+      if node.nodeType is 1 then itemAry.push node
 
-    itemWidth  = if width then width else @helper.getElementWidth(itemAry[0])
+    itemWidth  = if width then width else @helper.getElementWidth itemAry[0]
     totalWidth = itemAry.length * itemWidth
 
     @el.style.width = "#{totalWidth}px"
@@ -334,41 +352,63 @@ namespace "Flickable", -> class Core
 
   # 毎回コストかかってる感じなのでチューニングしたい
   _loop: ->
-    lastPoint = @maxPoint - 1
     clearTime = @opts.interval / 2
+    console.log "### currnetPoint  %s", @currentPoint
+    # console.log "@@@ maxPoint      %s", @maxPoint
+    # console.log "$$$ childNodesLen %s", @childNodes.length
     smartLoop = =>
-      if @currentPoint is @maxPoint
-        @moveToPoint(1, 0)
-      else if (@currentPoint is 0)
-        @moveToPoint(lastPoint, 0)
+      # こ、超えるぞーって場合
+      # if @currentPoint >= (@maxPoint - @visibleSize)
+      #   @moveToPoint @maxPoint - @currentPoint, 0
+      # # も、戻るぞーって場合
+      # else if @currentPoint <= @visibleSize
+      #   @moveToPoint @maxPoint - @visibleSize, 0
+
+      # if      @currentPoint is 4
+      #   @moveToPoint 12, 0
+      # else if @currentPoint is 13
+      #   @moveToPoint  5, 0
+
+      switch @currentPoint
+        when  4 then @moveToPoint 12, 0
+        when  3 then @moveToPoint 11, 0
+        when  2 then @moveToPoint 10, 0
+        when  1 then @moveToPoint  9, 0
+        when  0 then @moveToPoint  8, 0
+        when 13 then @moveToPoint  5, 0
+        when 14 then @moveToPoint  6, 0
+        when 15 then @moveToPoint  7, 0
+        when 16 then @moveToPoint  8, 0
+        when 17 then @moveToPoint  9, 0
+
     transitionEndEventName = @helper.getTransitionEndEventName()
 
     if transitionEndEventName isnt undefined
-      @el.addEventListener(transitionEndEventName, smartLoop, false)
-      window.setTimeout =>
-        @el.removeEventListener(transitionEndEventName, smartLoop, false)
+      @el.addEventListener transitionEndEventName, smartLoop, false
+      setTimeout =>
+        @el.removeEventListener transitionEndEventName, smartLoop, false
       , clearTime
     else
       timerId = smartLoop
-      window.clearTimeout ->
+      clearTimeout ->
         smartLoop()
       , clearTime
 
   _jsAnimate: (x, duration) ->
     begin    = +new Date()
-    from     = parseInt(@el.style.left, 10)
+    from     = parseInt @el.style.left, 10
     to       = x
-    duration = parseInt(duration, 10) or @opts.transition["duration"]
+    duration = parseInt duration, 10 or @opts.transition["duration"]
     easing   = (time, duration) ->
       -(time /= duration) * (time - 2)
-    timer    = window.setInterval ->
+    timer    = setInterval ->
       time = new Date() - begin
 
       if time > duration
-        window.clearInterval(timer)
+        clearInterval timer
         now = to
       else
-        pos = easing(time, duration)
+        pos = easing time, duration
         now = pos * (to - from) + from
 
       @el.style.left = "#{now}px"
@@ -381,6 +421,6 @@ namespace "Flickable", -> class Core
     if @opts.autoPlay
       @_clearAutoPlay()
 
-    @el.removeEventListener(@events.start, @, false)
+    @el.removeEventListener @events.start, @, false
 
-window.Flickable = Flickable.Core
+root.Flickable = Flickable.Core

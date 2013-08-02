@@ -1,9 +1,7 @@
 module.exports = (grunt) ->
-
   copyright = "// <%= pkg.title %> <%= pkg.version %> Copyright (c) 2013 <%= pkg.author %>\n" +
               "// See <%= pkg.url %>\n"
-
-  grunt.initConfig
+  config    =
     pkg: grunt.file.readJSON "package.json"
     exec:
       mocha:
@@ -71,6 +69,8 @@ module.exports = (grunt) ->
           "global"    : true
           "namespace" : true
           "Flickable" : true
+
+  grunt.initConfig config
 
   grunt.loadNpmTasks "grunt-exec"
   grunt.loadNpmTasks "grunt-notify"

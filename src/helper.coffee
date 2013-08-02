@@ -1,7 +1,7 @@
 namespace "Flickable", -> class Helper
 
   constructor: ->
-    @div      = document.createElement("div")
+    @div      = document.createElement "div"
     @prefixes = ["webkit", "moz", "o", "ms"]
     @saveProp = {}
 
@@ -16,7 +16,7 @@ namespace "Flickable", -> class Helper
     else if typeof props is "string"
       if @div.style[prop] isnt undefined then true else false
     else
-      throw new TypeError("Must be a Array or String")
+      throw new TypeError "Must be a Array or String"
 
   setStyle: (element, styles) ->
     style       = element.style
@@ -46,7 +46,7 @@ namespace "Flickable", -> class Helper
       _setAttr(style, prop, styles[prop])
 
   getCSSVal: (prop) ->
-    if typeof prop isnt "string" then throw new TypeError("Must be a String")
+    if typeof prop isnt "string" then throw new TypeError "Must be a String"
 
     # transform とかデフォで対応してるんだったらそれを使う
     if @div.style[prop] isnt undefined
@@ -61,31 +61,31 @@ namespace "Flickable", -> class Helper
       return ret
 
   ucFirst: (str) ->
-    if typeof str isnt "string" then throw new TypeError("Must be a String")
+    if typeof str isnt "string" then throw new TypeError "Must be a String"
     str.charAt(0).toUpperCase() + str.substr(1)
 
   triggerEvent: (element, type, bubbles, cancelable, data) ->
-    if typeof element isnt "object" then throw new Error("Must be a Element")
+    if typeof element isnt "object" then throw new Error "Must be a Element"
 
-    event = document.createEvent("Event")
-    event.initEvent(type, bubbles, cancelable)
+    event = document.createEvent "Event"
+    event.initEvent type, bubbles, cancelable
 
     if data
       for d of data
         event[d] = data[d]
 
-    element.dispatchEvent(event)
+    element.dispatchEvent event
 
   checkBrowser: ->
-    ua      = window.navigator.userAgent.toLowerCase()
-    ios     = ua.match(/(?:iphone\sos|ip[oa]d.*os)\s([\d_]+)/)
-    android = ua.match(/(android)\s+([\d.]+)/)
+    ua      = navigator.userAgent.toLowerCase()
+    ios     = ua.match /(?:iphone\sos|ip[oa]d.*os)\s([\d_]+)/
+    android = ua.match /(android)\s+([\d.]+)/
 
     browserName    = if !!ios then "ios" else if !!android then "android" else "pc"
     browserVersion = do ->
       if not ios and not android then return null
 
-      parseFloat((ios or android).pop().split(/\D/).join("."), 10)
+      parseFloat (ios or android).pop().split(/\D/).join(".")
 
     return {
       name:     browserName
@@ -135,15 +135,19 @@ namespace "Flickable", -> class Helper
     }
 
   getDeviceWidth: ->
-    window.innerWidth
+    return window.innerWidth
+
+  getParentNodeWidth: (element) ->
+    if element is undefined then throw new Error "Element Not Found"
+    return element.parentNode.offsetWidth
 
   # インライン属性で定義された幅の取得がザルでござる〜
   # てか 要素の幅の取得、全パターン網羅するのってエグエグなんだなぁ〜
   # あー jQuery つかいたい jQuery 最高! 天才! ジーニアス! 頭いい
   getElementWidth: (element) ->
-    if element is undefined then throw new Error("Element Not Found")
+    if element is undefined then throw new Error "Element Not Found"
 
-    css          = window.getComputedStyle(element)
+    css          = window.getComputedStyle element
     boxSizingVal = undefined
     hasBoxSizing = do ->
       properties = [
@@ -170,22 +174,22 @@ namespace "Flickable", -> class Helper
 
         for prop, i in props
           if css[prop]
-            value[i] = parseFloat(css[props[0]].match(/\d+/), 10)
+            value[i] = parseFloat css[props[0]].match(/\d+/)
             total += value[i]
 
         return total
 
-      border  = styleParser(["border-right-width", "border-left-width"])
-      padding = styleParser(["padding-right",      "padding-left"])
+      border  = styleParser ["border-right-width", "border-left-width"]
+      padding = styleParser ["padding-right",      "padding-left"]
       width   = element.scrollWidth + border + padding;
       return width
     # else if hasBoxSizing and boxSizingVal is "border-box" or not hasBoxSizing
     else if element.scrollWidth is 0
-      width = parseFloat(element.style.width.match(/\d+/), 10)
+      width = parseFloat element.style.width.match /\d+/
 
       if not element.style.boxSizing or not element.style.webkitBoxSizing
-        if element.style.paddingRight then width += parseFloat(element.style.paddingRight.match(/\d+/), 10)
-        if element.style.paddingLeft  then width += parseFloat(element.style.paddingLeft.match(/\d+/), 10)
+        if element.style.paddingRight then width += parseFloat element.style.paddingRight.match /\d+/
+        if element.style.paddingLeft  then width += parseFloat element.style.paddingLeft.match  /\d+/
 
       return width
     else
@@ -199,12 +203,12 @@ namespace "Flickable", -> class Helper
   # なのでもうちょっといい方法あればそれにしたい
   getTransitionEndEventName: ->
     ua       = window.navigator.userAgent.toLowerCase()
-    match    = /(webkit)[ \/]([\w.]+)/.exec(ua)  or
-               /(firefox)[ \/]([\w.]+)/.exec(ua) or
-               /(msie) ([\w.]+)/.exec(ua)        or
-               /(opera)(?:.*version|)[ \/]([\w.]+)/.exec(ua) or []
+    match    = /(webkit)[ \/]([\w.]+)/.exec ua  or
+               /(firefox)[ \/]([\w.]+)/.exec ua or
+               /(msie) ([\w.]+)/.exec ua        or
+               /(opera)(?:.*version|)[ \/]([\w.]+)/.exec ua or []
     browser  = match[1]
-    version  = parseFloat(match[2], 10)
+    version  = parseFloat match[2]
 
     if browser is "msie" and version >= 10 then browser = "modernIE"
 

@@ -1,7 +1,7 @@
-mocha.setup("bdd")
+mocha.setup "bdd"
 
-window.onload = -> 
+window.onload = ->
   if window.mochaPhantomJS
-    mochaPhantomJS.run();
+    mochaPhantomJS.run()
   else
-    mocha.run();
+    mocha.run()
