@@ -1,7 +1,6 @@
-namespace "Flickable", -> class Core
+helper = new @Flickable.Helper()
 
-  helper = new Flickable.Helper()
-
+class Core
   constructor: (element, options, callback) ->
     if not element
       throw new Error "Element Not Found"
@@ -392,4 +391,4 @@ namespace "Flickable", -> class Core
 
     @el.removeEventListener @events.start, @, false
 
-root.Flickable = Flickable.Core
+@Flickable = Core

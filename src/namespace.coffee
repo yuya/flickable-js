@@ -1,11 +1,6 @@
-root = window ? global ? this
+global = window ? global ? this
+NS     = "Flickable"
 
-root.namespace = (namespace, fn) ->
-  klass   = fn()
-  context = root
-
-  for token in namespace.split(".")
-    context[token] ?= {}
-    context = context[token]
-
-  context[klass.name] = klass
+global[NS] =
+  Core   : null
+  Helper : null

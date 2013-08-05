@@ -1,5 +1,4 @@
-namespace "Flickable", -> class Helper
-
+class Helper
   constructor: ->
     @div      = document.createElement "div"
     @prefixes = ["webkit", "moz", "o", "ms"]
@@ -235,3 +234,5 @@ namespace "Flickable", -> class Helper
         return "transitionend"
       else
         return undefined
+
+@Flickable.Helper = Helper
