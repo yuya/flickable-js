@@ -1,16 +1,15 @@
-// Flickable.js 0.1.4 Copyright (c) 2013 @yuya
+// Flickable.js 0.1.6 Copyright (c) 2013 @yuya
 // See https://github.com/yhmt/flickable-js
 (function() {
-  var Core, Helper, NS, global, helper, _ref;
-
-  global = (_ref = typeof window !== "undefined" && window !== null ? window : global) != null ? _ref : this;
+  var Flickable, Helper, NS, global, that, _ref;
 
   NS = "Flickable";
 
-  global[NS] = {
-    Core: null,
-    Helper: null
-  };
+  that = this;
+
+  global = (_ref = typeof window !== "undefined" && window !== null ? window : global) != null ? _ref : this;
+
+  global[NS] = null;
 
   Helper = (function() {
     function Helper() {
@@ -304,12 +303,10 @@
 
   })();
 
-  this.Flickable.Helper = Helper;
+  that.Helper = Helper;
 
-  helper = new this.Flickable.Helper();
-
-  Core = (function() {
-    function Core(element, options, callback) {
+  Flickable = (function() {
+    function Flickable(element, options, callback) {
       var eventName,
         _this = this;
 
@@ -318,7 +315,7 @@
       } else if (typeof element === "object" && element.length) {
         element = element[0];
       }
-      this.helper = helper;
+      this.helper = new that.Helper();
       this.el = typeof element === "string" ? this.helper.selector(element) : element;
       this.opts = options || {};
       this.browser = this.helper.checkBrowser();
@@ -402,7 +399,7 @@
       this.refresh();
     }
 
-    Core.prototype.handleEvent = function(event) {
+    Flickable.prototype.handleEvent = function(event) {
       switch (event.type) {
         case this.events.start:
           return this._touchStart(event);
@@ -415,7 +412,7 @@
       }
     };
 
-    Core.prototype.refresh = function() {
+    Flickable.prototype.refresh = function() {
       var getMaxPoint,
         _this = this;
 
@@ -443,29 +440,29 @@
       return this.moveToPoint();
     };
 
-    Core.prototype.hasPrev = function() {
+    Flickable.prototype.hasPrev = function() {
       return this.currentPoint > 0;
     };
 
-    Core.prototype.hasNext = function() {
+    Flickable.prototype.hasNext = function() {
       return this.currentPoint < this.maxPoint;
     };
 
-    Core.prototype.toPrev = function() {
+    Flickable.prototype.toPrev = function() {
       if (!this.hasPrev()) {
         return;
       }
       return this.moveToPoint(this.currentPoint - 1);
     };
 
-    Core.prototype.toNext = function() {
+    Flickable.prototype.toNext = function() {
       if (!this.hasNext()) {
         return;
       }
       return this.moveToPoint(this.currentPoint + 1);
     };
 
-    Core.prototype.moveToPoint = function(point, duration) {
+    Flickable.prototype.moveToPoint = function(point, duration) {
       var beforePoint;
 
       if (point == null) {
@@ -492,7 +489,7 @@
       }
     };
 
-    Core.prototype._setX = function(x, duration) {
+    Flickable.prototype._setX = function(x, duration) {
       if (duration == null) {
         duration = this.opts.transition["duration"];
       }
@@ -508,7 +505,7 @@
       }
     };
 
-    Core.prototype._touchStart = function(event) {
+    Flickable.prototype._touchStart = function(event) {
       if (this.opts.disableTouch || this.gestureStart) {
         return;
       }
@@ -541,7 +538,7 @@
       return this.helper.triggerEvent(this.el, "fltouchstart", true, false);
     };
 
-    Core.prototype._touchMove = function(event) {
+    Flickable.prototype._touchMove = function(event) {
       var deltaX, deltaY, distX, isPrevent, newX, pageX, pageY;
 
       if (this.opts.autoPlay) {
@@ -593,7 +590,7 @@
       }
     };
 
-    Core.prototype._touchEnd = function(event) {
+    Flickable.prototype._touchEnd = function(event) {
       var newPoint,
         _this = this;
 
@@ -628,7 +625,7 @@
       return this.moveToPoint(newPoint);
     };
 
-    Core.prototype._touchAfter = function(params) {
+    Flickable.prototype._touchAfter = function(params) {
       var _this = this;
 
       this.scrolling = false;
@@ -639,12 +636,12 @@
       return this.helper.triggerEvent(this.el, "fltouchend", true, false, params);
     };
 
-    Core.prototype._click = function(event) {
+    Flickable.prototype._click = function(event) {
       event.stopPropagation();
       return event.preventDefault();
     };
 
-    Core.prototype._getTranslate = function(x) {
+    Flickable.prototype._getTranslate = function(x) {
       if (this.opts.use3d) {
         return "translate3d(" + x + "px, 0, 0)";
       } else {
@@ -652,7 +649,7 @@
       }
     };
 
-    Core.prototype._cloneNode = function() {
+    Flickable.prototype._cloneNode = function() {
       var i, insertNode, insertedCount, nodeAry, parentNodeWidth,
         _this = this;
 
@@ -693,7 +690,7 @@
       this.didCloneNode = true;
     };
 
-    Core.prototype._startAutoPlay = function() {
+    Flickable.prototype._startAutoPlay = function() {
       var interval, toNextFn,
         _this = this;
 
@@ -709,11 +706,11 @@
       })();
     };
 
-    Core.prototype._clearAutoPlay = function() {
+    Flickable.prototype._clearAutoPlay = function() {
       return clearInterval(this.timerId);
     };
 
-    Core.prototype._setTotalWidth = function(width) {
+    Flickable.prototype._setTotalWidth = function(width) {
       var childNodes, itemAry, itemWidth, node, totalWidth, _i, _len;
 
       if (width && typeof width !== "number") {
@@ -732,7 +729,7 @@
       this.el.style.width = "" + totalWidth + "px";
     };
 
-    Core.prototype._loop = function() {
+    Flickable.prototype._loop = function() {
       var smartLoop, timerId, transitionEndEventName,
         _this = this;
 
@@ -757,7 +754,7 @@
       }
     };
 
-    Core.prototype._jsAnimate = function(x, duration) {
+    Flickable.prototype._jsAnimate = function(x, duration) {
       var begin, easing, from, timer, to;
 
       begin = +new Date();
@@ -782,17 +779,17 @@
       }, 10);
     };
 
-    Core.prototype.destroy = function() {
+    Flickable.prototype.destroy = function() {
       if (this.opts.autoPlay) {
         this._clearAutoPlay();
       }
       return this.el.removeEventListener(this.events.start, this, false);
     };
 
-    return Core;
+    return Flickable;
 
   })();
 
-  this.Flickable = Core;
+  global[NS] = Flickable;
 
 }).call(this);

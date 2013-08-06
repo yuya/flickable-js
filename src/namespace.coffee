@@ -1,6 +1,5 @@
-global = window ? global ? this
 NS     = "Flickable"
+that   = @
+global = window ? global ? this
 
-global[NS] =
-  Core   : null
-  Helper : null
+global[NS] = null

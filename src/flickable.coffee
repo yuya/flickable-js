@@ -1,13 +1,11 @@
-helper = new @Flickable.Helper()
-
-class Core
+class Flickable
   constructor: (element, options, callback) ->
     if not element
       throw new Error "Element Not Found"
     else if typeof element is "object" and element.length
       element = element[0]
 
-    @helper  = helper
+    @helper  = new that.Helper()
     @el      = if typeof element is "string" then @helper.selector element else element
     @opts    = options or {}
     @browser = @helper.checkBrowser()
@@ -34,7 +32,7 @@ class Core
     # Variable Params
     @currentPoint      = @opts.currentPoint or 0
     @childElementCount = @el.childElementCount
-    @maxPoint          = @currentX   = @maxX                       = 0
+    @maxPoint          = @currentX   = @maxX                      = 0
     @gestureStart      = @moveReady  = @scrolling = @didCloneNode = false
     @startTime         = @timerId    = @basePageX =
     @startPageX        = @startPageY = @distance  = @visibleSize  = null
@@ -391,4 +389,4 @@ class Core
 
     @el.removeEventListener @events.start, @, false
 
-@Flickable = Core
+global[NS] = Flickable

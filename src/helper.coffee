@@ -235,4 +235,4 @@ class Helper
       else
         return undefined
 
-@Flickable.Helper = Helper
+that.Helper = Helper

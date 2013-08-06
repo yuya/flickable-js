@@ -66,9 +66,8 @@ module.exports = (grunt) ->
         browser : true
         devel   : true
         globals:
-          "global"    : true
-          "namespace" : true
-          "Flickable" : true
+          "global" : true
+          "that"   : true
 
   grunt.initConfig config
 
