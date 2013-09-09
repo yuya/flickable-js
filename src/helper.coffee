@@ -215,7 +215,7 @@ class Helper
   # ブラウザのバージョンによって正しいのが取得できなかったりしそうな不安感たっぷりのメソッドである
   # なのでもうちょっといい方法あればそれにしたい
   getTransitionEndEventName: ->
-    ua       = window.navigator.userAgent.toLowerCase()
+    ua       = navigator.userAgent.toLowerCase()
     match    = /(webkit)[ \/]([\w.]+)/.exec ua  or
                /(firefox)[ \/]([\w.]+)/.exec ua or
                /(msie) ([\w.]+)/.exec ua        or

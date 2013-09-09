@@ -1,4 +1,4 @@
-// Flickable.js 0.1.6 Copyright (c) 2013 @yuya
+// Flickable.js 0.1.7 Copyright (c) 2013 @yuya
 // See https://github.com/yhmt/flickable-js
 (function() {
   var Flickable, Helper, NS, global, that, _ref;
@@ -279,7 +279,7 @@
     Helper.prototype.getTransitionEndEventName = function() {
       var browser, match, ua, version;
 
-      ua = window.navigator.userAgent.toLowerCase();
+      ua = navigator.userAgent.toLowerCase();
       match = /(webkit)[ \/]([\w.]+)/.exec(ua || /(firefox)[ \/]([\w.]+)/.exec(ua || /(msie) ([\w.]+)/.exec(ua || /(opera)(?:.*version|)[ \/]([\w.]+)/.exec(ua || []))));
       browser = match[1];
       version = parseFloat(match[2]);
@@ -363,8 +363,6 @@
           position: "relative",
           left: "0px"
         });
-      }
-      if (this.support.eventListener) {
         document.addEventListener("gesturestart", function() {
           _this.gestureStart = true;
         }, false);
@@ -493,6 +491,7 @@
       if (duration == null) {
         duration = this.opts.transition["duration"];
       }
+      x = parseInt(x, 10);
       this.currentX = x;
       if (this.support.cssAnimation && !this.browser.isLegacy) {
         return this.helper.setStyle(this.el, {

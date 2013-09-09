@@ -25,8 +25,8 @@ class Flickable
     @opts.loop          = @opts.loop          or if @opts.autoPlay then true else false
     @opts.transition    = @opts.transition    or {}
     @opts.transition    =
-      timingFunction:  @opts.transition["timingFunction"] or "cubic-bezier(0.23, 1, 0.32, 1)"
-      duration:        do =>
+      timingFunction:     @opts.transition["timingFunction"] or "cubic-bezier(0.23, 1, 0.32, 1)"
+      duration:           do =>
         @opts.transition["duration"] or if @browser.isLegacy then "200ms" else "330ms"
 
     # Variable Params
@@ -55,7 +55,6 @@ class Flickable
         position: "relative"
         left:     "0px"
 
-    if @support.eventListener
       document.addEventListener "gesturestart", =>
         @gestureStart = true
         return
@@ -152,6 +151,7 @@ class Flickable
       if @opts.loop then @_loop()
 
   _setX: (x, duration = @opts.transition["duration"]) ->
+    x = parseInt x, 10
     @currentX = x
 
     if @support.cssAnimation and not @browser.isLegacy
